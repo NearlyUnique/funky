@@ -15,6 +15,9 @@ internal partial class TheMock
             Task.FromResult(new SomeType { Name = "OB" }));
     }
 
+    public static Func<int, decimal, Task<SomeType>> OrangeBanana3(string name) =>
+        (i, d) => Task.FromResult(new SomeType { Name = "OB" });
+
     public static AnyTypeAsyncFunc OrangeBanana2(string name) =>
         (i, d) => Task.FromResult(new SomeType { Name = "OB2" });
 }

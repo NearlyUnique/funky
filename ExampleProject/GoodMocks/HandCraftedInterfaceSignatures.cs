@@ -51,7 +51,7 @@ public class MockingTest
     public async Task Test_OrangeBanana()
     {
         var mock = new GoodMocks.HandCrafted.TheMock {
-            OnTaskOfTAsync = GoodMocks.HandCrafted.TheMock.OrangeBanana("one"),
+            OnTaskOfTAsync = GoodMocks.HandCrafted.TheMock.OrangeBanana3("one"),
         };
 
         await mock.TaskOfTAsync(0, 0m);
