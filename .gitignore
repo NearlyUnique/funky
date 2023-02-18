@@ -1,0 +1,6 @@
+.idea/
+obj/
+bin/
+*.exe
+*.dll
+*.sln.DotSettings.user
