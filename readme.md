@@ -12,23 +12,26 @@ At it's core I prefer to mock any functions using replacement functions with ver
 
 ```c#
 // the production interface
-public interface ICustomerSErvice {
-    CustomerDTO? FindCustomerById(Guid id);
+public interface IStockClient {
+    StockItem? FindStockById(Guid id);
 }
 // some class under test
 public class Controller {
-    public Controller(ICustomerService service) {}
-    public CustomerResponse HandleSearchById(Guid id) {} 
+    public Controller(IStockClient client) {}
+    public Response HandleAddItem(Guid skuId) {}
 }
 // a test
-public void Any_test() {
-    var mock = new MockService{
-        OnFindCustomerById = _ => new CustomerDTO{Fname="first",Last="second"};
+[Test]
+public void An_error_is_returned_for_out_of_stock_items() {
+    var mock = new MockClient{
+        // any stock item is "out of stock"
+        OnFindStockById = _ => new StockItem{InStock = false};
     };
-    var customerResponse = new Controller(mock).HandleSearchById(Guid.NewGuid());
-    
-    Assert.IsEqual("first second", customerResponse.Name);
-    Assert.IsEqual(1, mock.Calls.FindCustomerById.Count())
+    var response = new Controller(mock).HandleAddItem(Guid.NewGuid());
+
+    Assert.IsEqual("Out Of Stock", response.Error);
+    // if you really want to see how many calls were made
+    Assert.IsEqual(1, mock.Calls.FindStockById.Count())
 }
 ```
 
@@ -37,27 +40,25 @@ You can see we implement as much as we need for mock. The mocked implementation 
 All this is achieved with some Source Code Generation. All you need to do is define a `partial class` that implements the interface you care about and add the `[Funky]` attribute. Source generation creates the implementation and adds the source to your code for you to inspect, debug or ignore.
 
 ```c#
-[Funky]
-partial class MockService : ICustomerService {}
+[Funky(typeof(IStockClient))]
+internal partial class MockClient {}
 ```
 
 You can use your part of the partial class to keep related static helper methods. e.g.
 
 ```c#
 [Funky]
-partial class MockService : ICustomerService {
-    public static CustomerDTO ReturnPremiumCustomer(Guid id){
-        return new CustomerDTO {
-            Fname = "first",
-            Last = "second",
-            IsPremium = true                
+internal partial class MockClient {
+    public static StockItem? ReturnInStockItem(Guid id) =>
+        new StockItem {
+            Display = "Beans",
+            InStock = true
         };
-    }
 }
 
 public void Any_test() {
-    var mock = new MockService{
-        OnFindCustomerById = MockService.ReturnPremiumCustomer
+    var mock = new MockClient {
+        OnFindStockById = MockClient.ReturnInStockItem
     };
     // ...
 }
