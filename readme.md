@@ -15,23 +15,28 @@ At it's core I prefer to mock any functions using replacement functions with ver
 public interface IStockClient {
     StockItem? FindStockById(Guid id);
 }
+
 // some class under test
 public class Controller {
-    public Controller(IStockClient client) {}
-    public Response HandleAddItem(Guid skuId) {}
+    public Controller(IStockClient client) { }
+    public Response HandleAddItem(Guid skuId) {
+        // SNIP real logic
+        return new Response();
+    }
 }
+
 // a test
 [Test]
 public void An_error_is_returned_for_out_of_stock_items() {
-    var mock = new MockClient{
+    var mock = new MockClient {
         // any stock item is "out of stock"
-        OnFindStockById = _ => new StockItem{InStock = false};
+        OnFindStockById = _ => new StockItem { InStock = false }
     };
     var response = new Controller(mock).HandleAddItem(Guid.NewGuid());
 
-    Assert.IsEqual("Out Of Stock", response.Error);
+    Assert.AreEqual("Out Of Stock", response.Error);
     // if you really want to see how many calls were made
-    Assert.IsEqual(1, mock.Calls.FindStockById.Count())
+    Assert.AreEqual(1, mock.Calls.FindStockById.Count);
 }
 ```
 
@@ -47,8 +52,7 @@ internal partial class MockClient {}
 You can use your part of the partial class to keep related static helper methods. e.g.
 
 ```c#
-[Funky]
-internal partial class MockClient {
+public partial class MockClient {
     public static StockItem? ReturnInStockItem(Guid id) =>
         new StockItem {
             Display = "Beans",
