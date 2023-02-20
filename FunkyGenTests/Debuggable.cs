@@ -12,11 +12,6 @@ namespace FunkyGenTests;
         [Fact]
         public void SimpleGeneratorTest()
         {
-//             var originalSrc = @"namespace MyCode;
-// public class Program {
-//     public static void Main(string[] args) { }
-// }";
-            // Create the 'input' compilation that the generator will act on
             Compilation inputCompilation = CreateCompilation(@"
 namespace Root.MyCode {
     using System;
@@ -33,7 +28,7 @@ namespace Root.MyCode {
 namespace OtherRoot.Testing {
     using Root.MyCode;
     [Funky(typeof(IThing))]
-    public partial class AnyMocker {    
+    public partial class AnyMocker {
     }
 }
 public static class App{public static void Main(){}}

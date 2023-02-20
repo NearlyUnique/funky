@@ -8,9 +8,7 @@ public partial class FunkyGenerator
     {
         public bool HasValue => MockClass is not null && TargetInterface is not null;
         public string MockClassName => MockClass.Name;
-        public string MockClassNamespace => MockClass.ContainingNamespace.Name;
         public string TargetInterfaceName => TargetInterface.Name;
-        public string TargetInterfaceNamespace => TargetInterface.ContainingNamespace.Name;
     }
 
     private sealed class FunkyContextEqualityComparer : IEqualityComparer<FunkyContext>
