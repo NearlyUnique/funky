@@ -1,4 +1,6 @@
-﻿namespace ExampleProject.GoodMocks
+﻿using ExampleProject.GoodMocks;
+
+namespace ExampleProject.GoodMocks
 {
 
     internal class AnyType
@@ -10,7 +12,8 @@
     {
         string Text(int number);
         bool Predicate(float f, AnyType anyType);
-        DateTime When { get; }
+        // properties not yet supported
+        // DateTime When { get; }
         Task<int> SomeAsync();
         void AnAction(decimal dec);
     }
@@ -24,9 +27,7 @@ namespace ExampleProject.Tests
     [Funky(typeof(IThing))]
     internal partial class AnyMocker
     {
-        private int changeThisToForceRegeneration_;
-
-        public static string Custom() => "custom code";
+        private int changeThisToForceRegeneration;
     }
 }
 
@@ -40,10 +41,17 @@ namespace PlayArea
         [Test]
         public void Play()
         {
-            var mock = new AnyMocker();
+            var mock = new AnyMocker {
+                OnPredicate = (_,_) => true,
+            };
 
-            Assert.AreEqual("generated code",AnyMocker.Generated());
-            Assert.AreEqual("custom code",AnyMocker.Custom());
+            void ForceTestViaInterface(IThing thing)
+            {
+                Assert.IsTrue(thing.Predicate(0, new AnyType()));
+            }
+
+            ForceTestViaInterface(mock);
         }
     }
 }
+

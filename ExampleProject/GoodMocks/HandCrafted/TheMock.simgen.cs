@@ -8,18 +8,10 @@ namespace ExampleProject.GoodMocks.HandCrafted;
 
 internal partial class TheMock : IAnyInterface
 {
-    // Do named delegates make it easier?
-    public delegate bool IsOkFunc(string s);
-    public delegate Task AnyAsyncFunc(int i, SomeType s);
-    public delegate Task<SomeType> AnyTypeAsyncFunc(int i, decimal d);
-
     // Use Func<> & Action<>
     public Func<string, bool>? OnIsOk;
     public Func<int, SomeType, Task>? OnTaskAsync;
     public Func<int, decimal, Task<SomeType>>? OnTaskOfTAsync;
-
-    // use delegate
-    public AnyTypeAsyncFunc? OnTaskOfTAsync2;
 
     public CallHistory Calls { get; } = new();
 
@@ -58,14 +50,9 @@ internal partial class TheMock : IAnyInterface
     public Task<SomeType> TaskOfTAsync(int value1, decimal value2)
     {
         Calls.TaskOfTAsync.Add(new CallHistory.TaskOfTAsyncArgs(value1, value2));
-        // use of both type of func pointer is an experiment for use cases
         if (OnTaskOfTAsync is not null)
         {
             return OnTaskOfTAsync(value1, value2);
-        }
-        if (OnTaskOfTAsync2 is not null)
-        {
-            return OnTaskOfTAsync2(value1, value2);
         }
 
         return Task.FromResult<SomeType>(default!);

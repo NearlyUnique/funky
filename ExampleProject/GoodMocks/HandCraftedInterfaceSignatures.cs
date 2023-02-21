@@ -8,10 +8,9 @@ public class MockingTest
     [Test]
     public async Task HandCraftedInterfaceSignatures()
     {
-        var mock = new GoodMocks.HandCrafted.TheMock {
+        var mock = new HandCrafted.TheMock {
             OnIsOk = _ => true,
-            OnTaskAsync = async (i, st) => await Task.CompletedTask,
-            OnTaskOfTAsync2 = async (i, d) => await Task.FromResult(new SomeType { Name = $"x({i},{d})" }),
+            OnTaskAsync = async (_, _) => await Task.CompletedTask,
         };
         Assert.AreEqual(0, mock.Calls.IsOk.Count);
         Assert.True(mock.IsOk("from main"));
@@ -39,34 +38,16 @@ public class MockingTest
     }
 
     [Test]
-    public async Task Test_RedGreenBlue()
-    {
-        var mock = new GoodMocks.HandCrafted.TheMock{
-            OnTaskOfTAsync2 = GoodMocks.HandCrafted.TheMock.RedGreenBlue,
-        };
-
-        await mock.TaskOfTAsync(0, 0m);
-    }
-    [Test]
     public async Task Test_OrangeBanana()
     {
-        var mock = new GoodMocks.HandCrafted.TheMock {
-            OnTaskOfTAsync = GoodMocks.HandCrafted.TheMock.OrangeBanana3("one"),
+        var mock = new HandCrafted.TheMock {
+            OnTaskOfTAsync = HandCrafted.TheMock.OrangeBanana3("one"),
         };
 
         await mock.TaskOfTAsync(0, 0m);
     }
-    [Test]
-    public async Task Test_OrangeBanana2()
-    {
-        var mock = new GoodMocks.HandCrafted.TheMock {
-            OnTaskOfTAsync2 = GoodMocks.HandCrafted.TheMock.OrangeBanana2("two"),
-        };
-
-        await mock.TaskOfTAsync(0, 0m);
-    }
-
 }
+
 public static class ProductionCode
 {
     public static async Task<string> ProductionFunction(IAnyInterface any)
