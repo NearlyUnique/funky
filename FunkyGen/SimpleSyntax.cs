@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Text;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
 namespace FunkyGen;
@@ -13,8 +14,16 @@ public static class SimpleSyntax
 
     public record class Method(string Name, string ReturnType, IList<Arg> Args)
     {
-        public string Signature() => $"{ReturnType} {Name}({string.Join(", ", Args)})";
+        /// <summary>
+        /// public {returnType} {name}(arg list)
+        /// </summary>
+        /// <returns></returns>
+        public string Signature() => $"public {ReturnType} {Name}({string.Join(", ", Args)})";
 
+        /// <summary>
+        /// public [Func|Action] &lt;{type list}&gt;;
+        /// </summary>
+        /// <returns></returns>
         public string FuncPointer()
         {
             var funcType = "Action";
@@ -32,9 +41,13 @@ public static class SimpleSyntax
                 typeParams = "<"+string.Join(", ", args)+">";
             }
 
-            return $"{@funcType}{typeParams}? On{Name}";
+            return $"public {@funcType}{typeParams}? On{Name};";
         }
 
+        /// <summary>
+        /// (return) On{name}(args);
+        /// </summary>
+        /// <returns></returns>
         public string InvokeFuncPointer()
         {
             var @return = "return ";
@@ -45,6 +58,8 @@ public static class SimpleSyntax
 
             return $"{@return}On{Name}({string.Join(", ", Args.Select(x => x.Name))});";
         }
+
+        public string ThrowIfNull() => $"if (On{Name} is null) {{ throw new System.NotImplementedException(\"'On{Name}' has not been assigned\"); }}";
     }
 
     /// <summary>
@@ -81,5 +96,45 @@ public static class SimpleSyntax
             }
         }
     }
+    /// <summary>
+    /// From https://stackoverflow.com/a/27106959/14019
+    /// </summary>
+    /// <param name="s"></param>
+    /// <returns></returns>
+    public static string GetFullMetadataName(ISymbol? s)
+    {
+        if (s == null || IsRootNamespace(s))
+        {
+            return string.Empty;
+        }
 
+        var sb = new StringBuilder(s.MetadataName);
+        var last = s;
+
+        s = s.ContainingSymbol;
+
+        while (!IsRootNamespace(s))
+        {
+            if (s is ITypeSymbol && last is ITypeSymbol)
+            {
+                sb.Insert(0, '+');
+            }
+            else
+            {
+                sb.Insert(0, '.');
+            }
+
+            sb.Insert(0, s.OriginalDefinition.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat));
+            //sb.Insert(0, s.MetadataName);
+            s = s.ContainingSymbol;
+        }
+
+        return sb.ToString();
+    }
+
+    private static bool IsRootNamespace(ISymbol symbol)
+    {
+        INamespaceSymbol? s = null;
+        return (s = symbol as INamespaceSymbol) != null && s.IsGlobalNamespace;
+    }
 }

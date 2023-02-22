@@ -77,7 +77,7 @@ namespace ExampleProject.Testing
             Assert.Equal("Void_Void", m.Name);
             Assert.Equal("void", m.ReturnType);
             Assert.Empty(m.Args);
-            Assert.Equal("void Void_Void()", m.Signature());
+            Assert.Equal("public void Void_Void()", m.Signature());
         }
         [Fact]
         void with_basic_arguments()
@@ -96,12 +96,22 @@ namespace ExampleProject.Testing
             Assert.Equal("truthy", m.Args[1].Name);
             Assert.Equal("bool", m.Args[1].Type);
 
-            Assert.Equal("int Int_String_Boolean(string text, bool truthy)", m.Signature());
+            Assert.Equal("public int Int_String_Boolean(string text, bool truthy)", m.Signature());
         }
         [Fact]
         void with_generic_arguments()
         {
-            var iface = new CodeFactory(_source).Children<InterfaceDeclarationSyntax>();
+            const string source = @"using
+                                    namespace ExampleProject.GoodMocks {
+                                        class AClass { }
+                                    }
+                                    namespace ExampleProject.Testing {
+                                        internal interface IThing {
+                                            Task<string> Task_ofString_List_of_AClass(List<AClass> classy);
+                                        }
+                                    }
+";
+            var iface = new CodeFactory(source).Children<InterfaceDeclarationSyntax>();
             Assert.NotNull(iface);
 
             var methods = SimpleSyntax.Members(iface);
@@ -113,11 +123,10 @@ namespace ExampleProject.Testing
             Assert.Equal("classy", m.Args[0].Name);
             Assert.Equal("List<AClass>", m.Args[0].Type);
 
-            Assert.Equal("Task<string> Task_ofString_List_of_AClass(List<AClass> classy)", m.Signature());
+            Assert.Equal("public Task<string> Task_ofString_List_of_AClass(List<AClass> classy)", m.Signature());
         }
-
         [Fact]
-        void generating_function_pointersfor_void_return()
+        void generating_function_pointers_for_void_return()
         {
             var iface = new CodeFactory(_source).Children<InterfaceDeclarationSyntax>();
             Assert.NotNull(iface);
@@ -125,7 +134,7 @@ namespace ExampleProject.Testing
             var methods = SimpleSyntax.Members(iface);
             var m = methods.Single(x => x.Name == "Void_Void");
 
-            Assert.Equal("Action? OnVoid_Void", m.FuncPointer());
+            Assert.Equal("public Action? OnVoid_Void;", m.FuncPointer());
         }
         [Fact]
         void generating_function_pointers_for_with_void_and_args()
@@ -136,7 +145,7 @@ namespace ExampleProject.Testing
             var methods = SimpleSyntax.Members(iface);
             var m = methods.Single(x => x.Name == "Void_Int");
 
-            Assert.Equal("Action<int>? OnVoid_Int", m.FuncPointer());
+            Assert.Equal("public Action<int>? OnVoid_Int;", m.FuncPointer());
         }
         [Fact]
         void generating_function_pointers_for_with_typed_return()
@@ -151,7 +160,7 @@ namespace ExampleProject.Testing
             var methods = SimpleSyntax.Members(iface);
             var m = methods.Single(x => x.Name == "Int_String_Boolean");
 
-            Assert.Equal("Func<string, bool, int>? OnInt_String_Boolean", m.FuncPointer());
+            Assert.Equal("public Func<string, bool, int>? OnInt_String_Boolean;", m.FuncPointer());
         }
         [Fact]
         void invoke_the_function_pointer_for_void()
@@ -185,6 +194,17 @@ internal interface IThing {
             var m = methods.Single(x => x.Name == "Int_String_Boolean");
 
             Assert.Equal("return OnInt_String_Boolean(text, truthy);", m.InvokeFuncPointer());
+        }
+        [Fact]
+        void throw_if_func_is_unassigned()
+        {
+            var iface = new CodeFactory(_source).Children<InterfaceDeclarationSyntax>();
+            Assert.NotNull(iface);
+
+            var methods = SimpleSyntax.Members(iface);
+            var m = methods.Single(x => x.Name == "Void_Void");
+
+            Assert.Equal("if (OnVoid_Void is null) { throw new System.NotImplementedException(\"'OnVoid_Void' has not been assigned\"); }", m.ThrowIfNull());
         }
     }
 }
