@@ -1,10 +1,6 @@
 # Overview
 
-Mocking should be used sparingly but when you do use this technique it should be easy to do right and obvious how it works. If there is a problem with the test or the production code the Mocking system should help, not hinder.
-
-# Mock types
-
-There are Mocks, Stubs, Fakes and Test Doubles to name but a few. Here I use the word Mock to cover all types. The proposed approach does not limit you in any way to prefer other terminology or more precise meaning.
+Testing with [mocks](#mock-types) should be used sparingly but when you do use this technique it should be easy to do right and obvious how it works. If there is a problem with the test or the production code the Mocking system should help, not hinder.
 
 # Function based mocks
 
@@ -18,9 +14,13 @@ public interface IStockClient {
 
 // some class under test
 public class Controller {
-    public Controller(IStockClient client) { }
+    private readonly IStockClient _client;
+    public Controller(IStockClient client) => _client = client;
+
     public Response HandleAddItem(Guid skuId) {
-        // SNIP real logic
+        if (!_client.FindStockById(skuId).InStock) {
+            return new Response{ Error = "Out Of Stock" };
+        }
         return new Response();
     }
 }
@@ -66,4 +66,24 @@ public void Any_test() {
     };
     // ...
 }
+```
+
+# Mock types
+
+There are Mocks, Stubs, Fakes and Test Doubles to name but a few. Here I use the word Mock to cover all types. The proposed approach does not limit you in any way to prefer other terminology or more precise meaning.
+
+# Complex Mocks
+
+This is my opinion on the current style of mocking frameworks. Historically I would have hand coded what I can now auto generate as the extra typing time saved complex mock test debugging time later.
+
+This is a farly typical current approach with other mocking frameworks. If you pass the wrong uuid or don't specify `Any` or use the wrong type the test will just fail. The code that looks like a lambda isn't, it's an expression so is not designed to be executed, its designed to be examined by the framework. The frameworks encourage dense code blocks of setup where it is difficult to identify what is actually being tested. Simple DSL type factories can be built but are difficult to get right.
+
+```csharp
+var mock = new Mock<IStockClient>();
+mock.Setup(x => x.FindStockById(It.IsAny<Guid>())).
+    Returns(new StockItem()));
+
+// run test
+
+mock.Verify(x => x.FindStockById(specificUuid) );
 ```

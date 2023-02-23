@@ -40,10 +40,12 @@ public class ReadmeExample
     // some class under test
     public class Controller
     {
-        public Controller(IStockClient client) { }
-        public Response HandleAddItem(Guid skuId)
-        {
-            // real logic
+        private readonly IStockClient _client;
+        public Controller(IStockClient client) => _client = client;
+        public Response HandleAddItem(Guid skuId) {
+            if (!_client.FindStockById(skuId).InStock) {
+                return new Response{ Error = "Out Of Stock" };
+            }
             return new Response();
         }
     }
