@@ -1,24 +1,30 @@
-﻿using NUnit.Framework;
+﻿using System.Diagnostics.CodeAnalysis;
+using NUnit.Framework;
 
 namespace ExampleProject.GoodMocks;
 
+[SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
+[SuppressMessage("ReSharper", "CollectionNeverUpdated.Global")]
+[SuppressMessage("ReSharper", "NotAccessedPositionalProperty.Global")]
+[SuppressMessage("ReSharper", "InconsistentNaming")]
+[SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public class ReadmeExample
 {
     public class StockItem
     {
         public bool InStock;
-        public string Display;
+        public string? Display;
     }
 
     public class Response
     {
-        public string Error;
+        public string? Error;
     };
 
     // temp until it all works
     public partial class MockClient : IStockClient
     {
-        public Func<Guid, StockItem?> OnFindStockById;
+        public Func<Guid, StockItem?>? OnFindStockById;
         public StockItem? FindStockById(Guid id) => null;
         public CallHistory Calls { get; } = new();
 
@@ -43,7 +49,7 @@ public class ReadmeExample
         private readonly IStockClient _client;
         public Controller(IStockClient client) => _client = client;
         public Response HandleAddItem(Guid skuId) {
-            if (!_client.FindStockById(skuId).InStock) {
+            if (!_client.FindStockById(skuId)!.InStock) {
                 return new Response{ Error = "Out Of Stock" };
             }
             return new Response();

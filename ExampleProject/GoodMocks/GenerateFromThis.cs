@@ -27,7 +27,6 @@ namespace ExampleProject.Tests
     [Funky(typeof(IThing))]
     internal partial class AnyMocker
     {
-        private int changeThisToForceRegeneration;
     }
 }
 
@@ -43,6 +42,9 @@ namespace PlayArea
         {
             var mock = new AnyMocker {
                 OnPredicate = (_,_) => true,
+                OnText = _ => "",
+                OnAnAction = _ => { },
+                OnSomeAsync = () => Task.FromResult(0),
             };
 
             void ForceTestViaInterface(IThing thing)

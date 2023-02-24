@@ -18,7 +18,7 @@ public class Controller {
     public Controller(IStockClient client) => _client = client;
 
     public Response HandleAddItem(Guid skuId) {
-        if (!_client.FindStockById(skuId).InStock) {
+        if (!_client.FindStockById(skuId)!.InStock) {
             return new Response{ Error = "Out Of Stock" };
         }
         return new Response();
