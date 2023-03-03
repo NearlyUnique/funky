@@ -25,7 +25,13 @@ public class ReadmeExample
     public partial class MockClient : IStockClient
     {
         public Func<Guid, StockItem?>? OnFindStockById;
-        public StockItem? FindStockById(Guid id) => null;
+
+        public StockItem? FindStockById(Guid id)
+        {
+            Calls.FindStockById.Add(new CallHistory.FindStockByIdArgs(id));
+            return OnFindStockById!(id);
+        }
+
         public CallHistory Calls { get; } = new();
 
         public class CallHistory
@@ -62,7 +68,9 @@ public class ReadmeExample
     {
         var mock = new MockClient {
             // any stock item is "out of stock"
-            OnFindStockById = _ => new StockItem { InStock = false }
+            OnFindStockById = _ => {
+                return new StockItem { InStock = false };
+            }
         };
         var response = new Controller(mock).HandleAddItem(Guid.NewGuid());
 

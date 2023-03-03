@@ -11,6 +11,7 @@ public class MockingTest
         var mock = new HandCrafted.TheMock {
             OnIsOk = _ => true,
             OnTaskAsync = async (_, _) => await Task.CompletedTask,
+            OnTaskOfTAsync = async (a, b) => await Task.FromResult(new SomeType{Name = $"x({a},{b})"})
         };
         Assert.AreEqual(0, mock.Calls.IsOk.Count);
         Assert.True(mock.IsOk("from main"));
