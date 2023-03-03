@@ -24,18 +24,4 @@ internal sealed class {FunkyNamespaceLongName} : global::System.Attribute
     public global::System.Type Type {{ get; }}
 }}
 ";
-
-    /// <summary>
-    /// I'm not happy about adding this. But currently I cannot work out how to fully qualify all types found on the interface
-    /// </summary>
-    private const string GlobalUsing = """
-// Standard global using
-using global::System;
-using global::System.Collections.Generic;
-using global::System.IO;
-using global::System.Linq;
-using global::System.Net.Http;
-using global::System.Threading;
-using global::System.Threading.Tasks;
-""";
 }

@@ -1,16 +1,7 @@
-﻿using Microsoft.CodeAnalysis;
-
-namespace FunkyGen;
+﻿namespace FunkyGen;
 
 public partial class FunkyGenerator
 {
-    private readonly record struct FunkyContext(INamedTypeSymbol MockClass, INamedTypeSymbol TargetInterface)
-    {
-        public bool HasValue => MockClass is not null && TargetInterface is not null;
-        public string MockClassName => MockClass.Name;
-        public string TargetInterfaceName => TargetInterface.Name;
-    }
-
     private sealed class FunkyContextEqualityComparer : IEqualityComparer<FunkyContext>
     {
         private FunkyContextEqualityComparer() { }

@@ -12,55 +12,7 @@ public static class SimpleSyntax
         public override string ToString() => Type + " " + Name;
     }
 
-    public record class Method(string Name, string ReturnType, IList<Arg> Args)
-    {
-        /// <summary>
-        /// public {returnType} {name}(arg list)
-        /// </summary>
-        /// <returns></returns>
-        public string Signature() => $"public {ReturnType} {Name}({string.Join(", ", Args)})";
-
-        /// <summary>
-        /// public [Func|Action] &lt;{type list}&gt;;
-        /// </summary>
-        /// <returns></returns>
-        public string FuncPointer()
-        {
-            var funcType = "Action";
-            var args = new List<string>();
-
-            args.AddRange(Args.Select(x => x.Type));
-            if (ReturnType != "void")
-            {
-                funcType = "Func";
-                args.Add(ReturnType);
-            }
-            string typeParams = "";
-            if (args.Any())
-            {
-                typeParams = "<"+string.Join(", ", args)+">";
-            }
-
-            return $"public {@funcType}{typeParams}? On{Name};";
-        }
-
-        /// <summary>
-        /// (return) On{name}(args);
-        /// </summary>
-        /// <returns></returns>
-        public string InvokeFuncPointer()
-        {
-            var @return = "return ";
-            if (ReturnType == "void")
-            {
-                @return = "";
-            }
-
-            return $"{@return}On{Name}({string.Join(", ", Args.Select(x => x.Name))});";
-        }
-
-        public string ThrowIfNull() => $"if (On{Name} is null) {{ throw new System.NotImplementedException(\"'On{Name}' has not been assigned\"); }}";
-    }
+    public record Method(string Name, string ReturnType, IList<Arg> Args);
 
     /// <summary>
     /// C# keyword for the element accessibility (public, internal, etc.)

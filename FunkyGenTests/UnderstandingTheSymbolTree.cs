@@ -1,7 +1,5 @@
 ﻿using FunkyGen;
 using FunkyGenTests.Helper;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Xunit;
 
@@ -77,7 +75,7 @@ namespace ExampleProject.Testing
             Assert.Equal("Void_Void", m.Name);
             Assert.Equal("void", m.ReturnType);
             Assert.Empty(m.Args);
-            Assert.Equal("public void Void_Void()", m.Signature());
+            Assert.Equal("public void Void_Void()", SourceCode.Signature(m));
         }
         [Fact]
         void with_basic_arguments()
@@ -96,7 +94,7 @@ namespace ExampleProject.Testing
             Assert.Equal("truthy", m.Args[1].Name);
             Assert.Equal("bool", m.Args[1].Type);
 
-            Assert.Equal("public int Int_String_Boolean(string text, bool truthy)", m.Signature());
+            Assert.Equal("public int Int_String_Boolean(string text, bool truthy)", SourceCode.Signature(m));
         }
         [Fact]
         void with_generic_arguments()
@@ -123,7 +121,7 @@ namespace ExampleProject.Testing
             Assert.Equal("classy", m.Args[0].Name);
             Assert.Equal("List<AClass>", m.Args[0].Type);
 
-            Assert.Equal("public Task<string> Task_ofString_List_of_AClass(List<AClass> classy)", m.Signature());
+            Assert.Equal("public Task<string> Task_ofString_List_of_AClass(List<AClass> classy)", SourceCode.Signature(m));
         }
         [Fact]
         void generating_function_pointers_for_void_return()
@@ -134,7 +132,7 @@ namespace ExampleProject.Testing
             var methods = SimpleSyntax.Members(iface);
             var m = methods.Single(x => x.Name == "Void_Void");
 
-            Assert.Equal("public Action? OnVoid_Void;", m.FuncPointer());
+            Assert.Equal("public Action? OnVoid_Void;", SourceCode.FuncPointer(m));
         }
         [Fact]
         void generating_function_pointers_for_with_void_and_args()
@@ -145,7 +143,7 @@ namespace ExampleProject.Testing
             var methods = SimpleSyntax.Members(iface);
             var m = methods.Single(x => x.Name == "Void_Int");
 
-            Assert.Equal("public Action<int>? OnVoid_Int;", m.FuncPointer());
+            Assert.Equal("public Action<int>? OnVoid_Int;", SourceCode.FuncPointer(m));
         }
         [Fact]
         void generating_function_pointers_for_with_typed_return()
@@ -160,7 +158,7 @@ namespace ExampleProject.Testing
             var methods = SimpleSyntax.Members(iface);
             var m = methods.Single(x => x.Name == "Int_String_Boolean");
 
-            Assert.Equal("public Func<string, bool, int>? OnInt_String_Boolean;", m.FuncPointer());
+            Assert.Equal("public Func<string, bool, int>? OnInt_String_Boolean;", SourceCode.FuncPointer(m));
         }
         [Fact]
         void invoke_the_function_pointer_for_void()
@@ -176,7 +174,7 @@ namespace ExampleProject.Testing
             var methods = SimpleSyntax.Members(iface);
             var m = methods.Single(x => x.Name == "Void_Int");
 
-            Assert.Equal("OnVoid_Int(integer);", m.InvokeFuncPointer());
+            Assert.Equal("OnVoid_Int(integer);", SourceCode.InvokeFuncPointer(m));
         }
         [Fact]
         void invoke_the_function_pointer_for_return_type()
@@ -193,7 +191,7 @@ internal interface IThing {
             var methods = SimpleSyntax.Members(iface);
             var m = methods.Single(x => x.Name == "Int_String_Boolean");
 
-            Assert.Equal("return OnInt_String_Boolean(text, truthy);", m.InvokeFuncPointer());
+            Assert.Equal("return OnInt_String_Boolean(text, truthy);", SourceCode.InvokeFuncPointer(m));
         }
         [Fact]
         void throw_if_func_is_unassigned()
@@ -204,7 +202,7 @@ internal interface IThing {
             var methods = SimpleSyntax.Members(iface);
             var m = methods.Single(x => x.Name == "Void_Void");
 
-            Assert.Equal("if (OnVoid_Void is null) { throw new System.NotImplementedException(\"'OnVoid_Void' has not been assigned\"); }", m.ThrowIfNull());
+            Assert.Equal("if (OnVoid_Void is null) { throw new System.NotImplementedException(\"'OnVoid_Void' has not been assigned\"); }", SourceCode.ThrowIfNull(m));
         }
     }
 }
