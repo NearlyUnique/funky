@@ -2,9 +2,9 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExampleProject", "ExampleProject\ExampleProject.csproj", "{D3A3AEBF-E9FA-4FD9-93FD-38087FCFC77D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FunkyGen", "FunkyGen\FunkyGen.csproj", "{AF30BCFA-AA0A-47F7-877D-0CCDCC64D447}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FunkyMock", "FunkyMock\FunkyMock.csproj", "{AF30BCFA-AA0A-47F7-877D-0CCDCC64D447}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FunkyGenTests", "FunkyGenTests\FunkyGenTests.csproj", "{5E2BD755-D55B-4BDD-8B9C-96B40EE6DB87}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FunkyMockTests", "FunkyMockTests\FunkyMockTests.csproj", "{5E2BD755-D55B-4BDD-8B9C-96B40EE6DB87}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

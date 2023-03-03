@@ -21,7 +21,7 @@ namespace ExampleProject.GoodMocks
 
 namespace ExampleProject.Tests
 {
-    using FunkyGen;
+    using FunkyMock;
     using ExampleProject.GoodMocks;
 
     [Funky(typeof(IThing))]

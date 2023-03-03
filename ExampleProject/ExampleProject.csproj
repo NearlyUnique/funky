@@ -15,7 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\FunkyGen\FunkyGen.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+      <ProjectReference Include="..\FunkyMock\FunkyMock.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
     </ItemGroup>
 
 </Project>
