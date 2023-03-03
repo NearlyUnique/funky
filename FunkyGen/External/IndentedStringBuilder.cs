@@ -27,7 +27,13 @@ public sealed class IndentedStringBuilder
     private bool _indentPending = true;
 
     private readonly StringBuilder _stringBuilder = new();
-
+    public static string NewLine { get; set; } =
+// Not allowed to use Environment.NewLine inside an analyzer!
+#if Windows
+        "\r\n";
+#else
+        "\n";
+#endif
     /// <summary>
     ///     Gets the current indent level.
     /// </summary>
@@ -129,7 +135,9 @@ public sealed class IndentedStringBuilder
             DoIndent();
         }
 
-        _stringBuilder.AppendLine(value);
+        //_stringBuilder.AppendLine(value);
+        _stringBuilder.Append(value);
+        _stringBuilder.Append(NewLine);
 
         _indentPending = true;
 

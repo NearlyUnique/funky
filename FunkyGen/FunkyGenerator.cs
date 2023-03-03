@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Text;
+using FunkyGen.External;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -71,22 +71,23 @@ public sealed partial class FunkyGenerator : IIncrementalGenerator
     {
         var targetInterface = source.TargetInterface;
 
-        var implementation = new StringBuilder();
-        var pointers = new StringBuilder();
+        var implementation = new IndentedStringBuilder();
+        var pointers = new IndentedStringBuilder();
+
+        pointers.IncrementIndent();
+        implementation.IncrementIndent();
 
         foreach (var member in SimpleSyntax.Members(targetInterface))
         {
-            pointers.Append('\t')
-                .Append(member.FuncPointer())
-                .Append('\n');
+            pointers.AppendLine(member.FuncPointer());
 
-            implementation.Append("\t")
-                .Append(member.Signature())
-                .Append(" {\n\t\t")
-                .Append(member.ThrowIfNull())
-                .Append("\n\t\t")
-                .Append(member.InvokeFuncPointer())
-                .Append("\n\t}\n");
+            implementation.Append(member.Signature())
+                .AppendLine(" {")
+                .IncrementIndent()
+                .AppendLine(member.ThrowIfNull())
+                .AppendLine(member.InvokeFuncPointer())
+                .DecrementIndent()
+                .AppendLine("}");
         }
 
 

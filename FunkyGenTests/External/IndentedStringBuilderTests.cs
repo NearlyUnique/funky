@@ -12,6 +12,7 @@ namespace FunkyGenTests.External;
 
 // namespace Microsoft.EntityFrameworkCore.Utilities;
 
+[Collection("AllowTesting-IndentedStringBuilder.NewLine")]
 public class IndentedStringBuilderTest
 {
     private static readonly string EOL = Environment.NewLine;
