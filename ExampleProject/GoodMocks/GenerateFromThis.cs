@@ -13,7 +13,7 @@ namespace ExampleProject.GoodMocks
         string Text(int number);
         bool Predicate(float f, AnyType anyType);
         // properties not yet supported
-        // DateTime When { get; }
+        DateTime When { get; }
         Task<int> SomeAsync();
         void AnAction(decimal dec);
     }

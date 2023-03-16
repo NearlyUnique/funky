@@ -8,10 +8,10 @@ namespace ExampleProject.GoodMocks.HandCrafted;
 
 internal partial class TheMock : IAnyInterface
 {
-    // Use Func<> & Action<>
     public Func<string, bool>? OnIsOk;
     public Func<int, SomeType, Task>? OnTaskAsync;
     public Func<int, decimal, Task<SomeType>>? OnTaskOfTAsync;
+    public Func<int>? OnGetCount;
 
     public CallHistory Calls { get; } = new();
 
@@ -20,10 +20,12 @@ internal partial class TheMock : IAnyInterface
         public List<IsOkArgs> IsOk { get; } = new();
         public List<TaskASyncArgs> TaskASync { get; } = new();
         public List<TaskOfTAsyncArgs> TaskOfTAsync { get; } = new();
+        public List<GetCountArgs> GetCount { get; } = new();
 
         public record IsOkArgs(string name);
         public record TaskASyncArgs(int value, SomeType some);
         public record TaskOfTAsyncArgs(int value1, decimal value2);
+        public record GetCountArgs();
     }
 
     public bool IsOk(string name)
@@ -56,5 +58,16 @@ internal partial class TheMock : IAnyInterface
         }
 
         return Task.FromResult<SomeType>(default!);
+    }
+
+    public int Count {
+        get {
+            Calls.GetCount.Add(new CallHistory.GetCountArgs());
+            if (OnGetCount is null)
+            {
+                throw new NotImplementedException("OnGetCount not implemented");
+            }
+            return OnGetCount();
+        }
     }
 }

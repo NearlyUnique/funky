@@ -80,8 +80,8 @@ public partial class SomeMock : FunkyMockTestSource.ISimple
         if (OnText is null) { throw new System.NotImplementedException("'OnText' has not been assigned"); }
         return OnText(value);
     }
-
 }
+
 """;
         var eol = IndentedStringBuilder.NewLine;
         try

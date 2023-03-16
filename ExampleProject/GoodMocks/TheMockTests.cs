@@ -29,4 +29,16 @@ public class TheMockTests
         Assert.AreEqual("Any Error 9", ex?.Message);
         Assert.AreEqual(9, ex?.Count);
     }
+
+    [Test]
+    public void readonly_property()
+    {
+        Assert.Throws<NotImplementedException>(() => { _ = new TheMock().Count; } );
+
+        var mock = new TheMock {
+            OnGetCount = () => 10,
+        };
+        Assert.AreEqual(10, mock.Count);
+        Assert.AreEqual(1, mock.Calls.GetCount.Count);
+    }
 }

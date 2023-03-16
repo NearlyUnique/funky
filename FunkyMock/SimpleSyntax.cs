@@ -12,7 +12,7 @@ public static class SimpleSyntax
         public override string ToString() => Type + " " + Name;
     }
 
-    public record Method(string Name, string ReturnType, IList<Arg> Args);
+    public record Method(string Name, string ReturnType, MethodKind Kind, IList<Arg> Args);
 
     /// <summary>
     /// C# keyword for the element accessibility (public, internal, etc.)
@@ -37,14 +37,21 @@ public static class SimpleSyntax
     {
         foreach (var member in symbol.GetMembers())
         {
-            if (member is IMethodSymbol method)
+            if (member is IMethodSymbol { MethodKind: Microsoft.CodeAnalysis.MethodKind.Ordinary } method)
             {
                 yield return new Method(
                     method.Name,
                     method.ReturnType.ToDisplayString(),
-                    method.Parameters.Select(a => {
-                        return new Arg(a.Name, a.Type.ToDisplayString());
-                    }).ToList().AsReadOnly());
+                    MethodKind.Ordinary,
+                    method.Parameters.Select(a => new Arg(a.Name, a.Type.ToDisplayString())).ToList().AsReadOnly());
+            }
+            else if (member is IPropertySymbol prop)
+            {
+                yield return new Method(
+                    prop.Name,
+                    prop.Type.ToDisplayString(),
+                    MethodKind.ReadProperty,
+                    Array.Empty<Arg>());
             }
         }
     }
