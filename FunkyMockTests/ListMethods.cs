@@ -134,7 +134,7 @@ namespace ExampleProject.Testing
         var methods = SimpleSyntax.Members(iface);
         var m = methods.Single(x => x.Name == "Void_Int");
 
-        Assert.Equal("OnVoid_Int(integer);", SourceCode.InvokeFuncPointer(m));
+        Assert.Equal("OnVoid_Int(integer);", SourceCode.InvokeFuncPointer(MethodKind.Ordinary, m));
     }
     [Fact]
     void invoke_the_function_pointer_for_return_type()
@@ -151,7 +151,7 @@ internal interface IThing {
         var methods = SimpleSyntax.Members(iface);
         var m = methods.Single(x => x.Name == "Int_String_Boolean");
 
-        Assert.Equal("return OnInt_String_Boolean(text, truthy);", SourceCode.InvokeFuncPointer(m));
+        Assert.Equal("return OnInt_String_Boolean(text, truthy);", SourceCode.InvokeFuncPointer(MethodKind.Ordinary, m));
     }
     [Fact]
     void throw_if_func_is_unassigned()

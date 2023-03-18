@@ -45,11 +45,17 @@ using global::System.Threading.Tasks;
         var args = new List<string>();
 
         args.AddRange(m.Args.Select(x => x.Type));
-        if (m.ReturnType != "void")
+        if (m.ReturnType != "void" && kind != MethodKind.WriteProperty)
         {
             funcType = "Func";
             args.Add(m.ReturnType);
         }
+
+        if (kind == MethodKind.WriteProperty)
+        {
+            args.Add(m.ReturnType);
+        }
+
         string typeParams = "";
         if (args.Any())
         {
@@ -69,9 +75,10 @@ using global::System.Threading.Tasks;
     /// (return) On{name}(args);
     /// </summary>
     /// <returns></returns>
-    public static string InvokeFuncPointer(SimpleSyntax.Method m)
+    public static string InvokeFuncPointer(MethodKind kind, SimpleSyntax.Method m)
     {
         var @return = "return ";
+
         if (m.Kind == MethodKind.Ordinary)
         {
             if (m.ReturnType == "void")
@@ -82,9 +89,11 @@ using global::System.Threading.Tasks;
             return $"{@return}On{m.Name}({string.Join(", ", m.Args.Select(x => x.Name))});";
         }
 
-        if ((m.Kind & MethodKind.ReadProperty) != 0)
+        if ((m.Kind & kind) != 0)
         {
-            return $"return OnGet{m.Name}();";
+            return kind == MethodKind.WriteProperty
+                ? $"OnSet{m.Name}(value);"
+                : $"return OnGet{m.Name}();";
         }
 
         return "!";
@@ -186,7 +195,7 @@ using global::System.Threading.Tasks;
             .AppendLine("get {")
             .IncrementIndent()
             .AppendLine(ThrowIfNull(MethodKind.ReadProperty, member))
-            .AppendLine(InvokeFuncPointer(member))
+            .AppendLine(InvokeFuncPointer(MethodKind.ReadProperty, member))
             .DecrementIndent()
             .AppendLine("}");
     }
@@ -195,6 +204,6 @@ using global::System.Threading.Tasks;
     {
         srcBuilder
             .AppendLine(ThrowIfNull(MethodKind.Ordinary, member))
-            .AppendLine(InvokeFuncPointer(member));
+            .AppendLine(InvokeFuncPointer(MethodKind.Ordinary, member));
     }
 }

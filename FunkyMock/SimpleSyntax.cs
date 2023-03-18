@@ -50,11 +50,28 @@ public static class SimpleSyntax
                 yield return new Method(
                     prop.Name,
                     prop.Type.ToDisplayString(),
-                    MethodKind.ReadProperty,
+                    SimplifyPropertyKind(prop),
                     Array.Empty<Arg>());
             }
         }
     }
+
+    private static MethodKind SimplifyPropertyKind(IPropertySymbol prop)
+    {
+        var kind = MethodKind.ReadWrite;
+        if (prop.IsReadOnly)
+        {
+            kind = MethodKind.ReadProperty;
+        }
+
+        if (prop.IsWriteOnly)
+        {
+            kind = MethodKind.WriteProperty;
+        }
+
+        return kind;
+    }
+
     /// <summary>
     /// From https://stackoverflow.com/a/27106959/14019
     /// </summary>
