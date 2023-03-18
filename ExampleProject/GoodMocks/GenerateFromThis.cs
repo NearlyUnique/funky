@@ -1,4 +1,5 @@
-﻿using ExampleProject.GoodMocks;
+﻿using System.Runtime.InteropServices.ComTypes;
+using ExampleProject.GoodMocks;
 
 namespace ExampleProject.GoodMocks
 {
@@ -14,6 +15,7 @@ namespace ExampleProject.GoodMocks
         bool Predicate(float f, AnyType anyType);
         // properties not yet supported
         DateTime When { get; }
+        string Name { get; set; }
         Task<int> SomeAsync();
         void AnAction(decimal dec);
     }
@@ -45,11 +47,14 @@ namespace PlayArea
                 OnText = _ => "",
                 OnAnAction = _ => { },
                 OnSomeAsync = () => Task.FromResult(0),
+                OnGetName = () => "the name",
+                OnSetName = _ => { },
             };
 
             void ForceTestViaInterface(IThing thing)
             {
                 Assert.IsTrue(thing.Predicate(0, new AnyType()));
+                Assert.AreEqual("the name", mock.Name);
             }
 
             ForceTestViaInterface(mock);

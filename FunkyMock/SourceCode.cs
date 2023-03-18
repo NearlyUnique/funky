@@ -77,26 +77,12 @@ using global::System.Threading.Tasks;
     /// <returns></returns>
     public static string InvokeFuncPointer(MethodKind kind, SimpleSyntax.Method m)
     {
-        var @return = "return ";
-
-        if (m.Kind == MethodKind.Ordinary)
-        {
-            if (m.ReturnType == "void")
-            {
-                @return = "";
-            }
-
-            return $"{@return}On{m.Name}({string.Join(", ", m.Args.Select(x => x.Name))});";
-        }
-
-        if ((m.Kind & kind) != 0)
-        {
-            return kind == MethodKind.WriteProperty
-                ? $"OnSet{m.Name}(value);"
-                : $"return OnGet{m.Name}();";
-        }
-
-        return "!";
+        return (m.Kind & kind) switch {
+            MethodKind.Ordinary => $"{(m.ReturnType == "void"?"":"return ")}On{m.Name}({string.Join(", ", m.Args.Select(x => x.Name))});",
+            MethodKind.ReadProperty => $"return OnGet{m.Name}();",
+            MethodKind.WriteProperty =>$"OnSet{m.Name}(value);",
+            _=> throw new ArgumentException($"kind ({kind}) does not match {m.Kind}", nameof(kind))
+        };
     }
 
     /// <summary>
@@ -107,12 +93,11 @@ using global::System.Threading.Tasks;
     /// <returns></returns>
     public static string ThrowIfNull(MethodKind kind, SimpleSyntax.Method m)
     {
-        kind &= m.Kind;
-        var name = kind switch {
+        var name = (kind&m.Kind) switch {
             MethodKind.Ordinary => m.Name,
             MethodKind.ReadProperty => "Get"+m.Name,
             MethodKind.WriteProperty => "Set"+m.Name,
-            _ => throw new InvalidOperationException("Ordinary, ReadProperty or Write Property only")
+            _ => throw new ArgumentException($"Cannot use ({kind})Ordinary, ReadProperty or Write Property only", nameof(kind))
         };
 
         return
@@ -173,7 +158,7 @@ using global::System.Threading.Tasks;
     {
         void AppendIf(MethodKind kind, SimpleSyntax.Method member)
         {
-            if (member.Kind == kind)
+            if ((member.Kind & kind) != 0)
             {
                 srcBuilder.AppendLine(FuncPointer(kind, member));
             }
@@ -191,13 +176,26 @@ using global::System.Threading.Tasks;
 
     private static void InnerPropertyBody(IndentedStringBuilder srcBuilder, SimpleSyntax.Method member)
     {
-        srcBuilder
-            .AppendLine("get {")
-            .IncrementIndent()
-            .AppendLine(ThrowIfNull(MethodKind.ReadProperty, member))
-            .AppendLine(InvokeFuncPointer(MethodKind.ReadProperty, member))
-            .DecrementIndent()
-            .AppendLine("}");
+        if ((member.Kind & MethodKind.ReadProperty) != 0)
+        {
+            srcBuilder
+                .AppendLine("get {")
+                .IncrementIndent()
+                .AppendLine(ThrowIfNull(MethodKind.ReadProperty, member))
+                .AppendLine(InvokeFuncPointer(MethodKind.ReadProperty, member))
+                .DecrementIndent()
+                .AppendLine("}");
+        }
+        if ((member.Kind & MethodKind.WriteProperty) != 0)
+        {
+            srcBuilder
+                .AppendLine("set {")
+                .IncrementIndent()
+                .AppendLine(ThrowIfNull(MethodKind.WriteProperty, member))
+                .AppendLine(InvokeFuncPointer(MethodKind.WriteProperty, member))
+                .DecrementIndent()
+                .AppendLine("}");
+        }
     }
 
     private static void InnerMethodBody(IndentedStringBuilder srcBuilder, SimpleSyntax.Method member)

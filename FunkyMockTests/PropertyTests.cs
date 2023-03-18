@@ -50,6 +50,8 @@ namespace ExampleProject.Testing
         Assert.Equal("public int Value", SourceCode.Signature(m));
         Assert.Equal("if (OnSetValue is null) { throw new System.NotImplementedException(\"'OnSetValue' has not been assigned\"); }", SourceCode.ThrowIfNull(MethodKind.WriteProperty,m));
 
+        Assert.Equal("public Func<int>? OnGetValue;", SourceCode.FuncPointer(MethodKind.ReadProperty, m));
+        Assert.Equal("return OnGetValue();", SourceCode.InvokeFuncPointer(MethodKind.ReadProperty, m));
         Assert.Equal("public Action<int>? OnSetValue;", SourceCode.FuncPointer(MethodKind.WriteProperty, m));
         Assert.Equal("OnSetValue(value);", SourceCode.InvokeFuncPointer(MethodKind.WriteProperty, m));
     }
