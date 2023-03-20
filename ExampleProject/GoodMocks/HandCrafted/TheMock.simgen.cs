@@ -12,6 +12,7 @@ internal partial class TheMock : IAnyInterface
     public Func<int, SomeType, Task>? OnTaskAsync;
     public Func<int, decimal, Task<SomeType>>? OnTaskOfTAsync;
     public Func<int>? OnGetCount;
+    public Action<int>? OnSetCount;
 
     public CallHistory Calls { get; } = new();
 
@@ -21,11 +22,13 @@ internal partial class TheMock : IAnyInterface
         public List<TaskASyncArgs> TaskASync { get; } = new();
         public List<TaskOfTAsyncArgs> TaskOfTAsync { get; } = new();
         public List<GetCountArgs> GetCount { get; } = new();
+        public List<SetCountArgs> SetCount { get; } = new();
 
         public record IsOkArgs(string name);
         public record TaskASyncArgs(int value, SomeType some);
         public record TaskOfTAsyncArgs(int value1, decimal value2);
         public record GetCountArgs();
+        public record SetCountArgs(int value);
     }
 
     public bool IsOk(string name)
@@ -68,6 +71,14 @@ internal partial class TheMock : IAnyInterface
                 throw new NotImplementedException("OnGetCount not implemented");
             }
             return OnGetCount();
+        }
+        set {
+            Calls.SetCount.Add(new CallHistory.SetCountArgs(value));
+            if (OnSetCount is null)
+            {
+                throw new NotImplementedException("OnGetCount not implemented");
+            }
+            OnSetCount(value);
         }
     }
 }

@@ -1,6 +1,8 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using FunkyMock;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Xunit;
 
 namespace FunkyMockTests.Helper;
 
@@ -22,4 +24,11 @@ internal sealed class CodeFactory
                 DescendantNodes().
                 OfType<T>().
                 First(filter ?? (_ => true)));
+
+    public static IEnumerable<SimpleSyntax.Method> Methods(string source)
+    {
+        var children = new CodeFactory(source).Children<InterfaceDeclarationSyntax>();
+        Assert.NotNull(children);
+        return SimpleSyntax.Members(children);
+    }
 }

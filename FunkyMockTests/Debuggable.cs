@@ -14,11 +14,11 @@ public class Debuggable
     [Fact]
     public void SimpleGeneratorTest()
     {
-        var eol = IndentedStringBuilder.NewLine;
+        var eol = IndentedStringBuilder.DefaultNewLine;
         try
         {
             // this file is LF (not CRLF) so we need to "normalise" the line ending
-            IndentedStringBuilder.NewLine = "\n";
+            IndentedStringBuilder.DefaultNewLine = "\n";
             Compilation inputCompilation = CreateCompilation(@"
 namespace Root.MyCode {
     using System;
@@ -82,7 +82,7 @@ public static class App{public static void Main(){}}
         }
         finally
         {
-            IndentedStringBuilder.NewLine = eol;
+            IndentedStringBuilder.DefaultNewLine = eol;
         }
     }
 
@@ -115,32 +115,57 @@ public partial class AnyMocker : Root.MyCode.IThing
     public Action<int>? OnSetReadWrite;
     public Action<bool>? OnSetWriteOnly;
 
+    public CallHistory Calls { get; } = new();
+
+    public class CallHistory
+    {
+        public List<TextArgs> Text { get; } = new();
+        public List<PredicateArgs> Predicate { get; } = new();
+        public List<GetReadOnlyArgs> GetReadOnly { get; } = new();
+        public List<GetReadWriteArgs> GetReadWrite { get; } = new();
+        public List<SetReadWriteArgs> SetReadWrite { get; } = new();
+        public List<SetWriteOnlyArgs> SetWriteOnly { get; } = new();
+
+        public record TextArgs(int number);
+        public record PredicateArgs(float f, Root.MyCode.AnyType anyType);
+        public record GetReadOnlyArgs();
+        public record GetReadWriteArgs();
+        public record SetReadWriteArgs(int value);
+        public record SetWriteOnlyArgs(bool value);
+    }
+
     public string Text(int number) {
+        Calls.Text.Add(new CallHistory.TextArgs(number));
         if (OnText is null) { throw new System.NotImplementedException("'OnText' has not been assigned"); }
         return OnText(number);
     }
     public bool Predicate(float f, Root.MyCode.AnyType anyType) {
+        Calls.Predicate.Add(new CallHistory.PredicateArgs(f, anyType));
         if (OnPredicate is null) { throw new System.NotImplementedException("'OnPredicate' has not been assigned"); }
         return OnPredicate(f, anyType);
     }
     public System.DateTime ReadOnly {
         get {
+            Calls.GetReadOnly.Add(new CallHistory.GetReadOnlyArgs());
             if (OnGetReadOnly is null) { throw new System.NotImplementedException("'OnGetReadOnly' has not been assigned"); }
             return OnGetReadOnly();
         }
     }
     public int ReadWrite {
         get {
+            Calls.GetReadWrite.Add(new CallHistory.GetReadWriteArgs());
             if (OnGetReadWrite is null) { throw new System.NotImplementedException("'OnGetReadWrite' has not been assigned"); }
             return OnGetReadWrite();
         }
         set {
+            Calls.SetReadWrite.Add(new CallHistory.SetReadWriteArgs(value));
             if (OnSetReadWrite is null) { throw new System.NotImplementedException("'OnSetReadWrite' has not been assigned"); }
             OnSetReadWrite(value);
         }
     }
     public bool WriteOnly {
         set {
+            Calls.SetWriteOnly.Add(new CallHistory.SetWriteOnlyArgs(value));
             if (OnSetWriteOnly is null) { throw new System.NotImplementedException("'OnSetWriteOnly' has not been assigned"); }
             OnSetWriteOnly(value);
         }

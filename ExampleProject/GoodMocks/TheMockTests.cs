@@ -41,4 +41,31 @@ public class TheMockTests
         Assert.AreEqual(10, mock.Count);
         Assert.AreEqual(1, mock.Calls.GetCount.Count);
     }
+    [Test]
+    public void what_would_automatic_read_write_implementation_look_like()
+    {
+        var rnd = new Random();
+        var mock = new TheMock();
+
+        Func<int>? defaultRead = () => {
+            if (!mock.Calls.SetCount.Any())
+                throw new InvalidOperationException(
+                    "Default 'Get' implementation requires 'Count' has been set, alternatively implement 'OnGetCount' and 'OnSetCount'");
+            return mock.Calls.SetCount.Last().value;
+        };
+        Action<int>? defaultWrite = _ => { };
+
+        mock.OnGetCount = defaultRead;
+        mock.OnSetCount = defaultWrite;
+
+        Assert.Throws<InvalidOperationException>(() => _ = mock.Count);
+
+        var value = rnd.Next();
+        mock.Count = value;
+        Assert.AreEqual(value, mock.Count);
+
+        value = rnd.Next();
+        mock.Count = value;
+        Assert.AreEqual(value, mock.Count);
+    }
 }

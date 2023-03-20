@@ -121,8 +121,14 @@ using global::System.Threading.Tasks;
             .AppendLine("{")
             .IncrementIndent();
 
-        AddFunctionPointers(srcBuilder, targetInterface);
-        ImplementInterface(srcBuilder, targetInterface);
+        var members = SimpleSyntax.Members(targetInterface).ToList();
+
+        AddFunctionPointers(srcBuilder, members);
+
+        CallHistoryGenerator.Generate(srcBuilder, members);
+
+        srcBuilder.AppendLine();
+        ImplementInterface(srcBuilder, members);
 
         srcBuilder
             .DecrementIndent()
@@ -131,9 +137,9 @@ using global::System.Threading.Tasks;
         return srcBuilder.ToString();
     }
 
-    private static void ImplementInterface(IndentedStringBuilder srcBuilder, INamedTypeSymbol targetInterface)
+    private static void ImplementInterface(IndentedStringBuilder srcBuilder, IEnumerable<SimpleSyntax.Method> members)
     {
-        foreach (var member in SimpleSyntax.Members(targetInterface))
+        foreach (var member in members)
         {
             srcBuilder.Append(Signature(member))
                 .AppendLine(" {")
@@ -154,7 +160,7 @@ using global::System.Threading.Tasks;
         }
     }
 
-    private static void AddFunctionPointers(IndentedStringBuilder srcBuilder, INamedTypeSymbol targetInterface)
+    private static void AddFunctionPointers(IndentedStringBuilder srcBuilder, IEnumerable<SimpleSyntax.Method> members)
     {
         void AppendIf(MethodKind kind, SimpleSyntax.Method member)
         {
@@ -164,7 +170,7 @@ using global::System.Threading.Tasks;
             }
         }
 
-        foreach (var member in SimpleSyntax.Members(targetInterface))
+        foreach (var member in members)
         {
             AppendIf(MethodKind.Ordinary, member);
             AppendIf(MethodKind.ReadProperty, member);
@@ -181,6 +187,7 @@ using global::System.Threading.Tasks;
             srcBuilder
                 .AppendLine("get {")
                 .IncrementIndent()
+                .AppendLine(CallHistoryGenerator.GenerateAddCall(MethodKind.ReadProperty, member))
                 .AppendLine(ThrowIfNull(MethodKind.ReadProperty, member))
                 .AppendLine(InvokeFuncPointer(MethodKind.ReadProperty, member))
                 .DecrementIndent()
@@ -191,6 +198,7 @@ using global::System.Threading.Tasks;
             srcBuilder
                 .AppendLine("set {")
                 .IncrementIndent()
+                .AppendLine(CallHistoryGenerator.GenerateAddCall(MethodKind.WriteProperty, member))
                 .AppendLine(ThrowIfNull(MethodKind.WriteProperty, member))
                 .AppendLine(InvokeFuncPointer(MethodKind.WriteProperty, member))
                 .DecrementIndent()
@@ -201,6 +209,7 @@ using global::System.Threading.Tasks;
     private static void InnerMethodBody(IndentedStringBuilder srcBuilder, SimpleSyntax.Method member)
     {
         srcBuilder
+            .AppendLine(CallHistoryGenerator.GenerateAddCall(MethodKind.Ordinary, member))
             .AppendLine(ThrowIfNull(MethodKind.Ordinary, member))
             .AppendLine(InvokeFuncPointer(MethodKind.Ordinary, member));
     }

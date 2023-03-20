@@ -76,18 +76,28 @@ public partial class SomeMock : FunkyMockTestSource.ISimple
 {
     public Func<string, string>? OnText;
 
+    public CallHistory Calls { get; } = new();
+
+    public class CallHistory
+    {
+        public List<TextArgs> Text { get; } = new();
+
+        public record TextArgs(string value);
+    }
+
     public string Text(string value) {
+        Calls.Text.Add(new CallHistory.TextArgs(value));
         if (OnText is null) { throw new System.NotImplementedException("'OnText' has not been assigned"); }
         return OnText(value);
     }
 }
 
 """;
-        var eol = IndentedStringBuilder.NewLine;
+        var eol = IndentedStringBuilder.DefaultNewLine;
         try
         {
             // this file is LF (not CRLF) so we need to "normalise" the line ending
-            IndentedStringBuilder.NewLine = "\n";
+            IndentedStringBuilder.DefaultNewLine = "\n";
             await VerifyCS.VerifyGeneratorAsync(userSource,
                 DiagnosticResult.EmptyDiagnosticResults
                 , new[] {
@@ -97,7 +107,7 @@ public partial class SomeMock : FunkyMockTestSource.ISimple
         }
         finally
         {
-            IndentedStringBuilder.NewLine = eol;
+            IndentedStringBuilder.DefaultNewLine = eol;
         }
     }
 }

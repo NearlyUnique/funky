@@ -55,6 +55,7 @@ namespace PlayArea
             {
                 Assert.IsTrue(thing.Predicate(0, new AnyType()));
                 Assert.AreEqual("the name", mock.Name);
+                Assert.AreEqual(1, mock.Calls.GetName.Count);
             }
 
             ForceTestViaInterface(mock);
