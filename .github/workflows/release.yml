@@ -14,3 +14,5 @@ jobs:
       - run: |
           echo "Name: '${{ github.event.release.name }}'"
           echo "Description: '${{ github.event.release.body }}'"
+          echo "Tag name from GITHUB_REF_NAME: $GITHUB_REF_NAME"
+          echo "Tag name from github.ref_name: ${{  github.ref_name }}"
