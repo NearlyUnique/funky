@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using FunkyMock;
 using NUnit.Framework;
 
 namespace ExampleProject.GoodMocks;
@@ -21,27 +22,44 @@ public class ReadmeExample
         public string? Error;
     };
 
-    // temp until it all works
+    // Copy of generated code for example
     public partial class MockClient : IStockClient
     {
-        public Func<Guid, StockItem?>? OnFindStockById;
-
-        public StockItem? FindStockById(Guid id)
-        {
-            Calls.FindStockById.Add(new CallHistory.FindStockByIdArgs(id));
-            return OnFindStockById!(id);
-        }
+        public Func<System.Guid, ExampleProject.GoodMocks.ReadmeExample.StockItem?>? OnFindStockById;
 
         public CallHistory Calls { get; } = new();
 
         public class CallHistory
         {
             public List<FindStockByIdArgs> FindStockById { get; } = new();
-            public record FindStockByIdArgs(Guid id);
+
+            public record FindStockByIdArgs(System.Guid id);
+        }
+
+        public ExampleProject.GoodMocks.ReadmeExample.StockItem? FindStockById(System.Guid id) {
+            Calls.FindStockById.Add(new CallHistory.FindStockByIdArgs(id));
+            if (OnFindStockById is null) { throw new System.NotImplementedException("'OnFindStockById' has not been assigned"); }
+            return OnFindStockById(id);
         }
     }
-
 //------ START Readme.me -----------------
+
+    // a test
+    [Test]
+    public void An_error_is_returned_for_out_of_stock_items()
+    {
+        var mock = new MockClient {
+            // any stock item is "out of stock"
+            OnFindStockById = _ => new StockItem { InStock = false }
+        };
+        var id = Guid.NewGuid();
+        var response = new Controller(mock).HandleAddItem(id);
+
+        Assert.AreEqual("Out Of Stock", response.Error);
+        // if you really want to see how many calls were made
+        Assert.AreEqual(1, mock.Calls.FindStockById.Count);
+        Assert.AreEqual(id, mock.Calls.FindStockById[0].id);
+    }
 
     // the production interface
     public interface IStockClient
@@ -60,23 +78,6 @@ public class ReadmeExample
             }
             return new Response();
         }
-    }
-
-    // a test
-    [Test]
-    public void An_error_is_returned_for_out_of_stock_items()
-    {
-        var mock = new MockClient {
-            // any stock item is "out of stock"
-            OnFindStockById = _ => {
-                return new StockItem { InStock = false };
-            }
-        };
-        var response = new Controller(mock).HandleAddItem(Guid.NewGuid());
-
-        Assert.AreEqual("Out Of Stock", response.Error);
-        // if you really want to see how many calls were made
-        Assert.AreEqual(1, mock.Calls.FindStockById.Count);
     }
     // -------------- part 2 -----------------
     public partial class MockClient {

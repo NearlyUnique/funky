@@ -6,9 +6,8 @@ namespace FunkyMock;
 
 public static class SimpleSyntax
 {
-    public record class Arg(string Name, string Type)
+    public record Arg(string Name, string Type)
     {
-        public static readonly IList<Arg> None = new List<Arg>().AsReadOnly();
         public override string ToString() => Type + " " + Name;
     }
 
@@ -70,47 +69,5 @@ public static class SimpleSyntax
         }
 
         return kind;
-    }
-
-    /// <summary>
-    /// From https://stackoverflow.com/a/27106959/14019
-    /// </summary>
-    /// <param name="s"></param>
-    /// <returns></returns>
-    public static string GetFullMetadataName(ISymbol? s)
-    {
-        if (s == null || IsRootNamespace(s))
-        {
-            return string.Empty;
-        }
-
-        var sb = new StringBuilder(s.MetadataName);
-        var last = s;
-
-        s = s.ContainingSymbol;
-
-        while (!IsRootNamespace(s))
-        {
-            if (s is ITypeSymbol && last is ITypeSymbol)
-            {
-                sb.Insert(0, '+');
-            }
-            else
-            {
-                sb.Insert(0, '.');
-            }
-
-            sb.Insert(0, s.OriginalDefinition.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat));
-            //sb.Insert(0, s.MetadataName);
-            s = s.ContainingSymbol;
-        }
-
-        return sb.ToString();
-    }
-
-    private static bool IsRootNamespace(ISymbol symbol)
-    {
-        INamespaceSymbol? s = null;
-        return (s = symbol as INamespaceSymbol) != null && s.IsGlobalNamespace;
     }
 }

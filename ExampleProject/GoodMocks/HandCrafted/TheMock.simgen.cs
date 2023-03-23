@@ -1,4 +1,5 @@
 ﻿using ExampleProject.Domain;
+// ReSharper disable InconsistentNaming
 
 namespace ExampleProject.GoodMocks.HandCrafted;
 

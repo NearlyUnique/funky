@@ -1,5 +1,4 @@
 ﻿using FunkyMock.External;
-using Microsoft.CodeAnalysis;
 
 namespace FunkyMock;
 

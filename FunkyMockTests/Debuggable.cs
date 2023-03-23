@@ -37,8 +37,9 @@ namespace Root.MyCode {
 namespace OtherRoot.Testing {
     using Root.MyCode;
 
-    [Funky(typeof(IThing))]
-    public partial class AnyMocker {
+    //[Funky(typeof(string))]
+    [Funky]
+    public partial class AnyMocker : IThing {
         // Will match 'GeneratedSource'
     }
 }
@@ -47,7 +48,7 @@ public static class App{public static void Main(){}}
 
             // directly create an instance of the generator
             // (Note: in the compiler this is loaded from an assembly, and created via reflection at runtime)
-            var generator = new FunkyGenerator();
+            var generator = new FunkyIncrementalGenerator();
 
             // Create the driver that will control the generation, passing in our generator
             GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
@@ -68,7 +69,7 @@ public static class App{public static void Main(){}}
             //
             // // The runResult contains the combined results of all generators passed to the driver
             // Debug.Assert(runResult.GeneratedTrees.Length == 1);
-            // Debug.Assert(runResult.Diagnostics.IsEmpty);
+            // Debug.Assert(IsEmpty);
             //
             // // Or you can access the individual results on a by-generator basis
             GeneratorRunResult generatorResult = runResult.Results[0];

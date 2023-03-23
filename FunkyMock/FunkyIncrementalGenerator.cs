@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace FunkyMock;
 
 [Generator(LanguageNames.CSharp)]
-public sealed partial class FunkyGenerator : IIncrementalGenerator
+public sealed partial class FunkyIncrementalGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -17,7 +17,7 @@ public sealed partial class FunkyGenerator : IIncrementalGenerator
             .CreateSyntaxProvider(ProviderPredicate, ProviderTransform)
             .Where(static ((INamedTypeSymbol, INamedTypeSymbol)? types) => types.HasValue)
             .Select(static ((INamedTypeSymbol, INamedTypeSymbol)? types, CancellationToken _) => SyntaxProviderTransformer(types?.Item1, types?.Item2))
-            .WithComparer(FunkyContextEqualityComparer.Instance);
+            .WithComparer(ContextEqualityComparer.Instance);
 
         context.RegisterSourceOutput(provider, Execute);
     }
@@ -40,10 +40,11 @@ public sealed partial class FunkyGenerator : IIncrementalGenerator
     {
         // Quick and dirty filter
         return syntaxNode is ClassDeclarationSyntax {
-                   AttributeLists.Count: > 0,
+                   // AttributeLists.Count: > 0,
                } candidate
                && candidate.Modifiers.Any(SyntaxKind.PartialKeyword)
-               && !candidate.Modifiers.Any(SyntaxKind.StaticKeyword);
+               && !candidate.Modifiers.Any(SyntaxKind.StaticKeyword)
+               && SimpleAttributeSyntax.HasAttribute(candidate, new[] { FunkyNamespaceShortName, FunkyNamespaceLongName });
     }
 
     private (INamedTypeSymbol, INamedTypeSymbol)? ProviderTransform(GeneratorSyntaxContext context,
@@ -55,11 +56,17 @@ public sealed partial class FunkyGenerator : IIncrementalGenerator
         INamedTypeSymbol? symbol = context.SemanticModel.GetDeclaredSymbol(candidate, cancellationToken);
 
         if (symbol is not null
-            && TryGetAttribute(candidate, new[] { FunkyNamespaceShortName, FunkyNamespaceLongName },
-                context.SemanticModel, cancellationToken, out AttributeSyntax? attribute)
-            && TryGetType(attribute, context.SemanticModel, cancellationToken, out INamedTypeSymbol? type)
+            && SimpleAttributeSyntax.TryGetAttribute(
+                candidate,
+                new[] { FunkyNamespaceShortName, FunkyNamespaceLongName },
+                context.SemanticModel,
+                cancellationToken,
+                out _)
+            && symbol.Interfaces.Length == 1
+            // && TryGetType(attribute, context.SemanticModel, cancellationToken, out INamedTypeSymbol? type)
            )
         {
+            var type = symbol.Interfaces[0];
             return (symbol, type);
         }
 

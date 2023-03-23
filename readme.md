@@ -7,6 +7,22 @@ Testing with [mocks](#mock-types) should be used sparingly but when you do use t
 At it's core I prefer to mock any functions using replacement functions with very simple test specific behaviour ideally just returning simple values.
 
 ```c#
+// a test
+[Test]
+public void An_error_is_returned_for_out_of_stock_items() {
+    var mock = new MockClient {
+        // any stock item is "out of stock"
+        OnFindStockById = _ => new StockItem { InStock = false }
+    };
+    var id = Guid.NewGuid();
+    var response = new Controller(mock).HandleAddItem(id);
+
+    Assert.AreEqual("Out Of Stock", response.Error);
+    // if you really want to see how many calls were made
+    Assert.AreEqual(1, mock.Calls.FindStockById.Count);
+    Assert.AreEqual(id, mock.Calls.FindStockById[0].id);
+}
+
 // the production interface
 public interface IStockClient {
     StockItem? FindStockById(Guid id);
@@ -23,20 +39,6 @@ public class Controller {
         }
         return new Response();
     }
-}
-
-// a test
-[Test]
-public void An_error_is_returned_for_out_of_stock_items() {
-    var mock = new MockClient {
-        // any stock item is "out of stock"
-        OnFindStockById = _ => new StockItem { InStock = false }
-    };
-    var response = new Controller(mock).HandleAddItem(Guid.NewGuid());
-
-    Assert.AreEqual("Out Of Stock", response.Error);
-    // if you really want to see how many calls were made
-    Assert.AreEqual(1, mock.Calls.FindStockById.Count);
 }
 ```
 
@@ -72,7 +74,7 @@ public void Any_test() {
 
 There are Mocks, Stubs, Fakes and Test Doubles to name but a few. Here I use the word Mock to cover all types. The proposed approach does not limit you in any way to prefer other terminology or more precise meaning.
 
-# Complex Mocks
+# Complex Mocking Frameworks
 
 This is my opinion on the current style of mocking frameworks. Historically I would have hand coded what I can now auto generate as the extra typing time saved complex mock test debugging time later.
 

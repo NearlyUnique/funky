@@ -1,5 +1,4 @@
-﻿using System.Runtime.InteropServices.ComTypes;
-using ExampleProject.GoodMocks;
+﻿using ExampleProject.GoodMocks;
 
 namespace ExampleProject.GoodMocks
 {
@@ -13,7 +12,6 @@ namespace ExampleProject.GoodMocks
     {
         string Text(int number);
         bool Predicate(float f, AnyType anyType);
-        // properties not yet supported
         DateTime When { get; }
         string Name { get; set; }
         Task<int> SomeAsync();
@@ -26,8 +24,8 @@ namespace ExampleProject.Tests
     using FunkyMock;
     using ExampleProject.GoodMocks;
 
-    [Funky(typeof(IThing))]
-    internal partial class AnyMocker
+    [Funky]
+    internal partial class AnyMocker : IThing
     {
     }
 }
