@@ -10,38 +10,32 @@ internal class SimpleAttributeSyntax
         ClassDeclarationSyntax candidate,
         IList<string> attributeNames,
         SemanticModel semanticModel,
-        CancellationToken cancellationToken,
-        [NotNullWhen(true)] out AttributeSyntax? value)
+        CancellationToken cancellationToken)
     {
-        foreach (AttributeListSyntax attributeList in candidate.AttributeLists)
+        foreach (var attributeList in candidate.AttributeLists)
         {
-            foreach (AttributeSyntax attribute in attributeList.Attributes)
+            foreach (var attribute in attributeList.Attributes)
             {
-                TypeInfo t = semanticModel.GetTypeInfo(attribute, cancellationToken);
+                var t = semanticModel.GetTypeInfo(attribute, cancellationToken);
                 if (t.Type != null && attributeNames.Contains(t.Type.Name))
                 {
-                    value = attribute;
                     return true;
                 }
             }
         }
 
-        value = null;
         return false;
     }
 
     internal static bool HasAttribute(ClassDeclarationSyntax candidate, string[] attributeNames)
     {
-        foreach (AttributeListSyntax attributeList in candidate.AttributeLists)
+        foreach (var attributeList in candidate.AttributeLists)
         {
-            foreach (AttributeSyntax attribute in attributeList.Attributes)
+            foreach (var attribute in attributeList.Attributes)
             {
-                if (attribute.Name is IdentifierNameSyntax ins)
+                if (attribute.Name is IdentifierNameSyntax ins && attributeNames.Contains(ins.Identifier.ValueText))
                 {
-                    if (attributeNames.Contains(ins.Identifier.ValueText))
-                    {
-                        return true;
-                    }
+                    return true;
                 }
             }
         }
