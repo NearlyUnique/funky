@@ -23,6 +23,9 @@ public void An_error_is_returned_for_out_of_stock_items() {
     Assert.AreEqual(id, mock.Calls.FindStockById[0].id);
 }
 
+// code to invoke the generator for MockClient
+internal partial class MockClient : IStockClient { }
+
 // the production interface
 public interface IStockClient {
     StockItem? FindStockById(Guid id);
@@ -47,14 +50,14 @@ You can see we implement as much as we need for mock. The mocked implementation 
 All this is achieved with some Source Code Generation. All you need to do is define a `partial class` that implements the interface you care about and add the `[Funky]` attribute. Source generation creates the implementation and adds the source to your code for you to inspect, debug or ignore.
 
 ```c#
-[Funky(typeof(IStockClient))]
-internal partial class MockClient {}
+[Funky]
+partial class MockClient : IStockClient { }
 ```
 
 You can use your part of the partial class to keep related static helper methods. e.g.
 
 ```c#
-public partial class MockClient {
+partial class MockClient : IStockClient {
     public static StockItem? ReturnInStockItem(Guid id) =>
         new StockItem {
             Display = "Beans",

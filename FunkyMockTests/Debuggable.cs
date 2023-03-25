@@ -37,7 +37,6 @@ namespace Root.MyCode {
 namespace OtherRoot.Testing {
     using Root.MyCode;
 
-    //[Funky(typeof(string))]
     [Funky]
     public partial class AnyMocker : IThing {
         // Will match 'GeneratedSource'

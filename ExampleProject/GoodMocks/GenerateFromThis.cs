@@ -25,9 +25,7 @@ namespace ExampleProject.Tests
     using ExampleProject.GoodMocks;
 
     [Funky]
-    internal partial class AnyMocker : IThing
-    {
-    }
+    partial class AnyMocker : IThing { }
 }
 
 namespace PlayArea

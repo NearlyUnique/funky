@@ -1,4 +1,6 @@
-﻿namespace FunkyMock;
+﻿using Microsoft.CodeAnalysis;
+
+namespace FunkyMock;
 
 internal sealed class ContextEqualityComparer : IEqualityComparer<FunkyContext>
 {
@@ -9,14 +11,21 @@ internal sealed class ContextEqualityComparer : IEqualityComparer<FunkyContext>
     public bool Equals(FunkyContext x, FunkyContext y)
     {
         return x.HasValue && y.HasValue &&
+               // The user can change their mock and not generate changes
                x.MockClass.Name == y.MockClass.Name &&
                x.MockClass.ContainingNamespace.Name == y.MockClass.ContainingNamespace.Name &&
-               x.TargetInterface.Name == y.TargetInterface.Name &&
-               x.TargetInterface.ContainingNamespace.Name == y.TargetInterface.ContainingNamespace.Name;
+               // any change to the interface forces a change
+               SymbolEqualityComparer.Default.Equals(x.TargetInterface, y.TargetInterface);
     }
 
     public int GetHashCode(FunkyContext obj)
     {
-        throw new NotImplementedException();
+        unchecked
+        {
+            var hash = 17;
+            hash = hash * 31 + SymbolEqualityComparer.Default.GetHashCode(obj.MockClass);
+            hash = hash * 31 + SymbolEqualityComparer.Default.GetHashCode(obj.TargetInterface);
+            return hash;
+        }
     }
 }

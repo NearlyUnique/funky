@@ -8,7 +8,7 @@
         <LangVersion>latest</LangVersion>
         <Title>Funky Mock Source Generator</Title>
         <Authors>Adam Straughan</Authors>
-        <Description>Add [ Funky( typeof( IAnyInterface ) ] to your partial class and have the mocked class code generated</Description>
+        <Description>Add [ Funky ] to your partial class that implements IAnyInterface and have the mocked class code generated</Description>
         <PackageProjectUrl>https://github.com/NearlyUnique/funky</PackageProjectUrl>
         <RepositoryUrl>https://github.com/NearlyUnique/funky</RepositoryUrl>
         <PackageTags>testing</PackageTags>
