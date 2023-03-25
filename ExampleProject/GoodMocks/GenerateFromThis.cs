@@ -45,6 +45,7 @@ namespace PlayArea
                 OnText = _ => "",
                 OnAnAction = _ => { },
                 OnSomeAsync = () => Task.FromResult(0),
+                OnGetWhen = () => DateTime.Now,
                 OnGetName = () => "the name",
                 OnSetName = _ => { },
             };
