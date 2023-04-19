@@ -72,6 +72,11 @@ public void Any_test() {
     // ...
 }
 ```
+# Install
+
+```shell
+dotnet add package FunkyMock
+```
 
 # Mock types
 
