@@ -1,5 +1,4 @@
-﻿using System.Text;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
 namespace FunkyMock;
@@ -57,17 +56,14 @@ public static class SimpleSyntax
 
     private static MethodKind SimplifyPropertyKind(IPropertySymbol prop)
     {
-        var kind = MethodKind.ReadWrite;
         if (prop.IsReadOnly)
         {
-            kind = MethodKind.ReadProperty;
+            return MethodKind.ReadProperty;
         }
-
         if (prop.IsWriteOnly)
         {
-            kind = MethodKind.WriteProperty;
+            return MethodKind.WriteProperty;
         }
-
-        return kind;
+        return MethodKind.ReadWrite;
     }
 }

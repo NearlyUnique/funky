@@ -77,6 +77,15 @@ public void Any_test() {
 ```shell
 dotnet add package FunkyMock
 ```
+# Configuration
+
+To control configuration add a file `.globalconfig` to the root of your consuming test project.
+
+Interfaces are, by default, implemented explicitly `ITheInterface.TheMethod()` vs implicitly `public TheMethod()`. to switch this to implicit set the following
+
+```ini
+funky.explicit_interfaces = false
+```
 
 # Mock types
 

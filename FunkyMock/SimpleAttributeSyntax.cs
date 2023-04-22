@@ -1,10 +1,9 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace FunkyMock;
 
-internal class SimpleAttributeSyntax
+internal static class SimpleAttributeSyntax
 {
     internal static bool TryGetAttribute(
         ClassDeclarationSyntax candidate,

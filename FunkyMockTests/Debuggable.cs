@@ -3,23 +3,18 @@ using Microsoft.CodeAnalysis.CSharp;
 using System.Diagnostics;
 using System.Reflection;
 using FunkyMock;
-using FunkyMock.External;
+using FunkyMock.Internal;
+using Microsoft.CodeAnalysis.Diagnostics;
 using Xunit;
 
 namespace FunkyMockTests;
 
-[Collection("AllowTesting-IndentedStringBuilder.NewLine")]
 public class Debuggable
 {
     [Fact]
     public void SimpleGeneratorTest()
     {
-        var eol = IndentedStringBuilder.DefaultNewLine;
-        try
-        {
-            // this file is LF (not CRLF) so we need to "normalise" the line ending
-            IndentedStringBuilder.DefaultNewLine = "\n";
-            Compilation inputCompilation = CreateCompilation(@"
+        Compilation inputCompilation = CreateCompilation(@"
 namespace Root.MyCode {
     using System;
     public class AnyType {
@@ -45,45 +40,47 @@ namespace OtherRoot.Testing {
 public static class App{public static void Main(){}}
 ");
 
-            // directly create an instance of the generator
-            // (Note: in the compiler this is loaded from an assembly, and created via reflection at runtime)
-            var generator = new FunkyIncrementalGenerator();
+        // directly create an instance of the generator
+        // (Note: in the compiler this is loaded from an assembly, and created via reflection at runtime)
+        var generator = new FunkyIncrementalGenerator();
 
-            // Create the driver that will control the generation, passing in our generator
-            GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
+        // Create the driver that will control the generation, passing in our generator
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
+        //driver.WithUpdatedParseOptions(new CSharpParseOptions());
+        driver = driver.WithUpdatedAnalyzerConfigOptions(
+            new TestAnalyzerConfigOptionsProvider(("funky.implicit_interfaces", "true")));
 
-            // Run the generation pass
-            // (Note: the generator driver itself is immutable, and all calls return an updated version of the driver that you should use for subsequent calls)
-            driver = driver.RunGeneratorsAndUpdateCompilation(inputCompilation, out var outputCompilation,
-                out var diagnostics);
+        // Run the generation pass
+        // (Note: the generator driver itself is immutable, and all calls return an updated version of the driver that you should use for subsequent calls)
+        driver = driver.RunGeneratorsAndUpdateCompilation(inputCompilation, out var outputCompilation,
+            out var diagnostics);
 
-            // We can now assert things about the resulting compilation:
-            Debug.Assert(diagnostics.IsEmpty); // there were no diagnostics created by the generators
-            Debug.Assert(outputCompilation.SyntaxTrees.Count() ==
-                         3); // we have three syntax trees, the original 'user' provided one, our fixed 'Funky' attribute and the one added by the generator
-            // Debug.Assert(outputCompilation.GetDiagnostics().IsEmpty); // verify the compilation with the added source has no diagnostics
-            //
-            // // Or we can look at the results directly:
-            GeneratorDriverRunResult runResult = driver.GetRunResult();
-            //
-            // // The runResult contains the combined results of all generators passed to the driver
-            // Debug.Assert(runResult.GeneratedTrees.Length == 1);
-            // Debug.Assert(IsEmpty);
-            //
-            // // Or you can access the individual results on a by-generator basis
-            GeneratorRunResult generatorResult = runResult.Results[0];
-            // // Debug.Assert(generatorResult.Generator == generator);
-            // Debug.Assert(generatorResult.Diagnostics.IsEmpty);
-            Debug.Assert(generatorResult.GeneratedSources.Length == 2);
-            var source = generatorResult.GeneratedSources[1].SourceText.ToString();
+        // We can now assert things about the resulting compilation:
+        Debug.Assert(diagnostics.IsEmpty); // there were no diagnostics created by the generators
+        // we have syntax trees
+        // 1. the original 'user' provided one
+        // 2. our fixed 'Funky' attribute
+        // 3. the one added by the generator
+        // 4. IFF Logger.IsEnabled then the log file
+        Debug.Assert(outputCompilation.SyntaxTrees.Count() == 3 + (Logger.IsEnabled ? 1 : 0));
+        // Debug.Assert(outputCompilation.GetDiagnostics().IsEmpty); // verify the compilation with the added source has no diagnostics
+        //
+        // // Or we can look at the results directly:
+        GeneratorDriverRunResult runResult = driver.GetRunResult();
+        //
+        // // The runResult contains the combined results of all generators passed to the driver
+        // Debug.Assert(runResult.GeneratedTrees.Length == 1);
+        // Debug.Assert(IsEmpty);
+        //
+        // // Or you can access the individual results on a by-generator basis
+        GeneratorRunResult generatorResult = runResult.Results[0];
+        // // Debug.Assert(generatorResult.Generator == generator);
+        // Debug.Assert(generatorResult.Diagnostics.IsEmpty);
+        Debug.Assert(generatorResult.GeneratedSources.Length == 2 + (Logger.IsEnabled ? 1 : 0));
+        var source = generatorResult.GeneratedSources[1].SourceText.ToString();
 
-            Assert.Equal(GeneratedSource, source);
-            // Debug.Assert(generatorResult.Exception is null);
-        }
-        finally
-        {
-            IndentedStringBuilder.DefaultNewLine = eol;
-        }
+        Assert.Equal(GeneratedSource, source);
+        // Debug.Assert(generatorResult.Exception is null);
     }
 
     private static Compilation CreateCompilation(string source)
@@ -134,24 +131,24 @@ public partial class AnyMocker : Root.MyCode.IThing
         public record SetWriteOnlyArgs(bool value);
     }
 
-    public string Text(int number) {
+    string Root.MyCode.IThing.Text(int number) {
         Calls.Text.Add(new CallHistory.TextArgs(number));
         if (OnText is null) { throw new System.NotImplementedException("'OnText' has not been assigned"); }
         return OnText(number);
     }
-    public bool Predicate(float f, Root.MyCode.AnyType anyType) {
+    bool Root.MyCode.IThing.Predicate(float f, Root.MyCode.AnyType anyType) {
         Calls.Predicate.Add(new CallHistory.PredicateArgs(f, anyType));
         if (OnPredicate is null) { throw new System.NotImplementedException("'OnPredicate' has not been assigned"); }
         return OnPredicate(f, anyType);
     }
-    public System.DateTime ReadOnly {
+    System.DateTime Root.MyCode.IThing.ReadOnly {
         get {
             Calls.GetReadOnly.Add(new CallHistory.GetReadOnlyArgs());
             if (OnGetReadOnly is null) { throw new System.NotImplementedException("'OnGetReadOnly' has not been assigned"); }
             return OnGetReadOnly();
         }
     }
-    public int ReadWrite {
+    int Root.MyCode.IThing.ReadWrite {
         get {
             Calls.GetReadWrite.Add(new CallHistory.GetReadWriteArgs());
             if (OnGetReadWrite is null) { throw new System.NotImplementedException("'OnGetReadWrite' has not been assigned"); }
@@ -163,7 +160,7 @@ public partial class AnyMocker : Root.MyCode.IThing
             OnSetReadWrite(value);
         }
     }
-    public bool WriteOnly {
+    bool Root.MyCode.IThing.WriteOnly {
         set {
             Calls.SetWriteOnly.Add(new CallHistory.SetWriteOnlyArgs(value));
             if (OnSetWriteOnly is null) { throw new System.NotImplementedException("'OnSetWriteOnly' has not been assigned"); }
@@ -173,4 +170,31 @@ public partial class AnyMocker : Root.MyCode.IThing
 }
 
 """;
+}
+
+public class TestAnalyzerConfigOptionsProvider : AnalyzerConfigOptionsProvider
+{
+    public Dictionary<string, string> Map { get; } = new();
+
+    public TestAnalyzerConfigOptionsProvider(params (string key, string value)[] pairs)
+    {
+        pairs.ToList().ForEach(x => Map.Add(x.key, x.value));
+    }
+
+    public override AnalyzerConfigOptions GetOptions(SyntaxTree tree) => throw new NotImplementedException();
+
+    public override AnalyzerConfigOptions GetOptions(AdditionalText textFile) => throw new NotImplementedException();
+
+    public override AnalyzerConfigOptions GlobalOptions => new TestAnalyzerConfigOptions(Map);
+}
+
+internal class TestAnalyzerConfigOptions : AnalyzerConfigOptions
+{
+    private readonly Dictionary<string, string> _map;
+
+    public TestAnalyzerConfigOptions(Dictionary<string, string> map) => _map = map;
+
+    public override bool TryGetValue(string key, out string value) => _map.TryGetValue(key, out value!);
+
+    public override IEnumerable<string> Keys => _map.Keys;
 }

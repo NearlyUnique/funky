@@ -1,4 +1,6 @@
 ﻿using FunkyMock.External;
+using FunkyMock.Internal;
+using Microsoft.CodeAnalysis;
 
 namespace FunkyMock;
 
@@ -10,7 +12,7 @@ public static class SourceCode
     /// <summary>
     /// I'm not happy about adding this. But currently I cannot work out how to fully qualify all types found on the interface
     /// </summary>
-    public const string GlobalUsing = """
+    private const string GlobalUsing = """
 // Standard global using
 using global::System;
 using global::System.Collections.Generic;
@@ -22,17 +24,11 @@ using global::System.Threading.Tasks;
 """;
 
     /// <summary>
-    /// public {returnType} {name}(arg list)
+    /// public implicit or explicit interface signature depending on availability of "interfaceName"
     /// </summary>
     /// <returns></returns>
-    public static string Signature(SimpleSyntax.Method m)
-    {
-        if (m.Kind == MethodKind.Ordinary)
-        {
-            return $"public {m.ReturnType} {m.Name}({string.Join(", ", m.Args)})";
-        }
-        return $"public {m.ReturnType} {m.Name}";
-    }
+    public static string Signature(string interfaceName, SimpleSyntax.Method m) =>
+        string.IsNullOrEmpty(interfaceName) ? ImplicitSignature(m) : ExplicitSignature(interfaceName, m);
 
     /// <summary>
     /// public [Func|Action] &lt;{type list}&gt;;
@@ -55,16 +51,17 @@ using global::System.Threading.Tasks;
             args.Add(m.ReturnType);
         }
 
-        string typeParams = "";
+        var typeParams = "";
         if (args.Any())
         {
-            typeParams = "<"+string.Join(", ", args)+">";
+            typeParams = "<" + string.Join(", ", args) + ">";
         }
+
         var name = (kind & m.Kind) switch {
             MethodKind.Ordinary => m.Name,
-            MethodKind.ReadProperty => "Get"+m.Name,
-            MethodKind.WriteProperty => "Set"+m.Name,
-            _ => throw new InvalidOperationException("Ordinary, ReadProperty or Write Property only")
+            MethodKind.ReadProperty => "Get" + m.Name,
+            MethodKind.WriteProperty => "Set" + m.Name,
+            _ => throw new ArgumentException($"kind ({kind}) does must be one of Ordinary, ReadProperty or WriteProperty", nameof(kind))
         };
 
         return $"public {funcType}{typeParams}? On{name};";
@@ -77,10 +74,11 @@ using global::System.Threading.Tasks;
     public static string InvokeFuncPointer(MethodKind kind, SimpleSyntax.Method m)
     {
         return (m.Kind & kind) switch {
-            MethodKind.Ordinary => $"{(m.ReturnType == "void"?"":"return ")}On{m.Name}({string.Join(", ", m.Args.Select(x => x.Name))});",
+            MethodKind.Ordinary =>
+                $"{(m.ReturnType == "void" ? "" : "return ")}On{m.Name}({string.Join(", ", m.Args.Select(x => x.Name))});",
             MethodKind.ReadProperty => $"return OnGet{m.Name}();",
-            MethodKind.WriteProperty =>$"OnSet{m.Name}(value);",
-            _=> throw new ArgumentException($"kind ({kind}) does not match {m.Kind}", nameof(kind))
+            MethodKind.WriteProperty => $"OnSet{m.Name}(value);",
+            _ => throw new ArgumentException($"kind ({kind}) does not match {m.Kind}", nameof(kind))
         };
     }
 
@@ -92,11 +90,12 @@ using global::System.Threading.Tasks;
     /// <returns></returns>
     public static string ThrowIfNull(MethodKind kind, SimpleSyntax.Method m)
     {
-        var name = (kind&m.Kind) switch {
+        var name = (kind & m.Kind) switch {
             MethodKind.Ordinary => m.Name,
-            MethodKind.ReadProperty => "Get"+m.Name,
-            MethodKind.WriteProperty => "Set"+m.Name,
-            _ => throw new ArgumentException($"Cannot use ({kind})Ordinary, ReadProperty or Write Property only", nameof(kind))
+            MethodKind.ReadProperty => "Get" + m.Name,
+            MethodKind.WriteProperty => "Set" + m.Name,
+            _ => throw new ArgumentException($"Cannot use ({kind})Ordinary, ReadProperty or Write Property only",
+                nameof(kind))
         };
 
         return
@@ -106,7 +105,6 @@ using global::System.Threading.Tasks;
     public static string Execute(FunkyContext source)
     {
         var targetInterface = source.TargetInterface;
-
         var srcBuilder = new IndentedStringBuilder();
 
         srcBuilder
@@ -116,7 +114,8 @@ using global::System.Threading.Tasks;
             .AppendLine()
             .AppendLine(GlobalUsing)
             .AppendLine()
-            .AppendLine($"{SimpleSyntax.Accessibility(source.MockClass)} partial class {source.MockClassName} : {SimpleSyntax.Namespace(source.TargetInterface)}.{source.TargetInterfaceName}")
+            .AppendLine(
+                $"{SimpleSyntax.Accessibility(source.MockClass)} partial class {source.MockClassName} : {SimpleSyntax.Namespace(source.TargetInterface)}.{source.TargetInterfaceName}")
             .AppendLine("{")
             .IncrementIndent();
 
@@ -127,7 +126,11 @@ using global::System.Threading.Tasks;
         CallHistoryGenerator.Generate(srcBuilder, members);
 
         srcBuilder.AppendLine();
-        ImplementInterface(srcBuilder, members);
+
+        ImplementInterface(
+            srcBuilder,
+            ConfiguredTargetInterfaceName(source, targetInterface),
+            members);
 
         srcBuilder
             .DecrementIndent()
@@ -136,11 +139,18 @@ using global::System.Threading.Tasks;
         return srcBuilder.ToString();
     }
 
-    private static void ImplementInterface(IndentedStringBuilder srcBuilder, IEnumerable<SimpleSyntax.Method> members)
+    private static string ConfiguredTargetInterfaceName(FunkyContext source, ISymbol targetInterface) =>
+        source.Config.ExplicitImplementation ? targetInterface.ToDisplayString() : "";
+
+    private static void ImplementInterface(
+        IndentedStringBuilder srcBuilder,
+        string targetInterfaceName,
+        IEnumerable<SimpleSyntax.Method> members)
     {
         foreach (var member in members)
         {
-            srcBuilder.Append(Signature(member))
+            srcBuilder
+                .Append(Signature(targetInterfaceName, member))
                 .AppendLine(" {")
                 .IncrementIndent();
 
@@ -192,6 +202,7 @@ using global::System.Threading.Tasks;
                 .DecrementIndent()
                 .AppendLine("}");
         }
+
         if ((member.Kind & MethodKind.WriteProperty) != 0)
         {
             srcBuilder
@@ -211,5 +222,36 @@ using global::System.Threading.Tasks;
             .AppendLine(CallHistoryGenerator.GenerateAddCall(MethodKind.Ordinary, member))
             .AppendLine(ThrowIfNull(MethodKind.Ordinary, member))
             .AppendLine(InvokeFuncPointer(MethodKind.Ordinary, member));
+    }
+
+    /// <summary>
+    /// In the style "public type Method()"
+    /// </summary>
+    /// <param name="m"></param>
+    /// <returns></returns>
+    private static string ImplicitSignature(SimpleSyntax.Method m)
+    {
+        if (m.Kind == MethodKind.Ordinary)
+        {
+            return $"public {m.ReturnType} {m.Name}({string.Join(", ", m.Args)})";
+        }
+
+        return $"public {m.ReturnType} {m.Name}";
+    }
+
+    /// <summary>
+    /// In the style "type IThing.Method()"
+    /// </summary>
+    /// <param name="interfaceName"></param>
+    /// <param name="m"></param>
+    /// <returns></returns>
+    private static string ExplicitSignature(string interfaceName, SimpleSyntax.Method m)
+    {
+        if (m.Kind == MethodKind.Ordinary)
+        {
+            return $"{m.ReturnType} {interfaceName}.{m.Name}({string.Join(", ", m.Args)})";
+        }
+
+        return $"{m.ReturnType} {interfaceName}.{m.Name}";
     }
 }

@@ -48,10 +48,17 @@ namespace PlayArea
                 OnSetName = _ => { },
             };
 
+            // [CS1061] 'AnyMocker' does not contain a definition for 'Name' and
+            // no accessible extension method 'Name' accepting a first argument
+            // of type 'AnyMocker' could be found (are you missing a using
+            // directive or an assembly reference?)
+            //
+            // _ = mock.Name;
+
             void ForceTestViaInterface(IThing thing)
             {
                 Assert.IsTrue(thing.Predicate(0, new AnyType()));
-                Assert.AreEqual("the name", mock.Name);
+                Assert.AreEqual("the name", thing.Name);
                 Assert.AreEqual(1, mock.Calls.GetName.Count);
             }
 

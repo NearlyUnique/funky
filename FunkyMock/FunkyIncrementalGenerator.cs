@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using FunkyMock.Internal;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -7,28 +8,37 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace FunkyMock;
 
 [Generator(LanguageNames.CSharp)]
-public sealed partial class FunkyIncrementalGenerator : IIncrementalGenerator
+public sealed class FunkyIncrementalGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         context.RegisterPostInitializationOutput(PostInitializationCallback);
 
+        var config = context.AnalyzerConfigOptionsProvider.Select(ConfigPipeline.Select);
+
         var provider = context.SyntaxProvider
             .CreateSyntaxProvider(ProviderPredicate, ProviderTransform)
-            .Where(static ((INamedTypeSymbol, INamedTypeSymbol)? types) => types.HasValue)
-            .Select(static ((INamedTypeSymbol, INamedTypeSymbol)? types, CancellationToken _) => SyntaxProviderTransformer(types?.Item1, types?.Item2))
+            .Combine(config)
+            .Where(static v => v.Left.HasValue)
+            .Select(SyntaxProviderTransformer)
             .WithComparer(ContextEqualityComparer.Instance);
 
         context.RegisterSourceOutput(provider, Execute);
     }
 
-    private static FunkyContext SyntaxProviderTransformer(INamedTypeSymbol? mockClass, INamedTypeSymbol? targetInterface)
+    /// <summary>
+    /// Convert pipeline args to a FunkyContext
+    /// </summary>
+    /// <param name="selector">tuple containing the type info and config, type is a tuple of mockClass and targetInterface</param>
+    /// <param name="_"></param>
+    /// <returns></returns>
+    private static FunkyContext SyntaxProviderTransformer(((INamedTypeSymbol mockClass, INamedTypeSymbol targetInterface)? types, Config config) selector, CancellationToken _)
     {
-        if (mockClass is null || targetInterface is null)
+        if (selector.types?.mockClass is null || selector.types?.targetInterface is null)
         {
-            return new FunkyContext(null!, null!);
+            return new FunkyContext(null!, null!, null!);
         }
-        return new FunkyContext(mockClass, targetInterface);
+        return new FunkyContext(selector.types?.mockClass, selector.types?.targetInterface, selector.config);
     }
 
     private static void PostInitializationCallback(IncrementalGeneratorPostInitializationContext context)
@@ -74,5 +84,6 @@ public sealed partial class FunkyIncrementalGenerator : IIncrementalGenerator
     {
         var code = SourceCode.Execute(funkyContext);
         context.AddSource($"{funkyContext.MockClassName}.g.cs", code);
+        Logger.Flush(context);
     }
 }

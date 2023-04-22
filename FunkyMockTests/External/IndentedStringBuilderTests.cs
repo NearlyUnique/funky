@@ -12,10 +12,9 @@ namespace FunkyMockTests.External;
 
 // namespace Microsoft.EntityFrameworkCore.Utilities;
 
-[Collection("AllowTesting-IndentedStringBuilder.NewLine")]
 public class IndentedStringBuilderTest
 {
-    private static readonly string EOL = Environment.NewLine;
+    private static readonly string EOL = "\n";
 
     [ConditionalFact]
     public void Append_at_start_with_indent()
@@ -138,7 +137,7 @@ public class IndentedStringBuilderTest
             indentedStringBuilder.AppendLine();
         }
 
-        Assert.Equal(Environment.NewLine, indentedStringBuilder.ToString());
+        Assert.Equal(EOL, indentedStringBuilder.ToString());
     }
 
     [ConditionalFact]

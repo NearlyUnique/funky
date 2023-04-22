@@ -27,14 +27,8 @@ public sealed class IndentedStringBuilder
     private bool _indentPending = true;
 
     private readonly StringBuilder _stringBuilder = new();
-    public static string DefaultNewLine { get; set; } =
-// Not allowed to use Environment.NewLine inside an analyzer!
-#if Windows
-        "\r\n";
-#else
-        "\n";
-#endif
-    public string NewLine { get; set; } = DefaultNewLine;
+    private const string NewLine = "\n";
+
     /// <summary>
     ///     Gets the current indent level.
     /// </summary>

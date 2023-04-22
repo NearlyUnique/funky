@@ -61,6 +61,6 @@ public static class CallHistoryGenerator
             MethodKind.Ordinary => $"Calls.{method.Name}.Add(new CallHistory.{method.Name}Args({string.Join(", ", method.Args.Select(x => x.Name))}));",
             MethodKind.ReadProperty => $"Calls.Get{method.Name}.Add(new CallHistory.Get{method.Name}Args());",
             MethodKind.WriteProperty => $"Calls.Set{method.Name}.Add(new CallHistory.Set{method.Name}Args(value));",
-            _ => throw new InvalidOperationException($"'{kind} not set on method {method.Kind}"),
+            _ => throw new ArgumentException($"kind ({kind}) does not set on method {method.Kind}", nameof(kind))
         };
 }

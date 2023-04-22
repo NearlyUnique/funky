@@ -30,7 +30,7 @@ public class CallHistory
 
 """;
         var methods = CodeFactory.Methods(code);
-        var srcBuilder = new IndentedStringBuilder{NewLine = "\n"};
+        var srcBuilder = new IndentedStringBuilder();
         CallHistoryGenerator.Generate(srcBuilder, methods);
 
         Assert.Equal(expected, srcBuilder.ToString());
@@ -59,7 +59,7 @@ public class CallHistory
 
 """;
         var methods = CodeFactory.Methods(code);
-        var srcBuilder = new IndentedStringBuilder{NewLine = "\n"};
+        var srcBuilder = new IndentedStringBuilder();
         CallHistoryGenerator.Generate(srcBuilder, methods);
 
         Assert.Equal(expected, srcBuilder.ToString());

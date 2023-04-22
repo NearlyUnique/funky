@@ -24,7 +24,7 @@ namespace ExampleProject.Testing
         var methods = SimpleSyntax.Members(iface);
         var m = methods.Single();
 
-        Assert.Equal("public int Value", SourceCode.Signature(m));
+        Assert.Equal("public int Value", SourceCode.Signature("", m));
         Assert.Equal("if (OnGetValue is null) { throw new System.NotImplementedException(\"'OnGetValue' has not been assigned\"); }", SourceCode.ThrowIfNull(MethodKind.ReadProperty,m));
 
         Assert.Equal("public Func<int>? OnGetValue;", SourceCode.FuncPointer(MethodKind.ReadProperty, m));
@@ -47,7 +47,7 @@ namespace ExampleProject.Testing
         var methods = SimpleSyntax.Members(iface);
         var m = methods.Single();
 
-        Assert.Equal("public int Value", SourceCode.Signature(m));
+        Assert.Equal("public int Value", SourceCode.Signature("", m));
         Assert.Equal("if (OnSetValue is null) { throw new System.NotImplementedException(\"'OnSetValue' has not been assigned\"); }", SourceCode.ThrowIfNull(MethodKind.WriteProperty,m));
 
         Assert.Equal("public Func<int>? OnGetValue;", SourceCode.FuncPointer(MethodKind.ReadProperty, m));

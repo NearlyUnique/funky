@@ -1,0 +1,2 @@
+﻿# true or false, lowercase only, default is true
+funky.explicit_interfaces = true
