@@ -24,6 +24,7 @@ public void An_error_is_returned_for_out_of_stock_items() {
 }
 
 // code to invoke the generator for MockClient
+[Funky]
 internal partial class MockClient : IStockClient { }
 
 // the production interface
